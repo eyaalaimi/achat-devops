@@ -2,13 +2,11 @@ pipeline {
     agent any
     
     tools {
-        // Ces noms doivent correspondre à ceux configurés dans Jenkins (Outils)
-        maven 'Maven3'   // Le nom que vous avez donné dans Configuration des outils
-        jdk 'JDK11'      // Le nom que vous avez donné dans Configuration des outils
+        maven 'Maven3'   // À configurer dans Jenkins : Manage Jenkins → Tools
+        jdk 'JDK21'      // À configurer dans Jenkins : Manage Jenkins → Tools
     }
     
     stages {
-        // Étape 1 : Récupération du code depuis Git
         stage('Checkout') {
             steps {
                 echo '=== Récupération du code depuis GitHub ==='
@@ -17,7 +15,6 @@ pipeline {
             }
         }
         
-        // Étape 2 : Nettoyage et compilation
         stage('Clean & Compile') {
             steps {
                 echo '=== Nettoyage et compilation du projet ==='
@@ -26,7 +23,6 @@ pipeline {
             }
         }
         
-        // Étape 3 : Exécution des tests unitaires
         stage('Test') {
             steps {
                 echo '=== Exécution des tests unitaires ==='
@@ -35,18 +31,22 @@ pipeline {
             }
             post {
                 always {
-                    // Publier les rapports de tests
-                    junit '**/target/surefire-reports/*.xml'
+                    junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
                 }
             }
         }
         
-        // Étape 4 : Empaquetage (création du JAR)
         stage('Package') {
             steps {
                 echo '=== Création du package JAR ==='
                 sh 'mvn package -DskipTests'
                 echo 'Package créé avec succès !'
+            }
+        }
+        
+        stage('Archive Artifacts') {
+            steps {
+                archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
             }
         }
     }
@@ -56,10 +56,10 @@ pipeline {
             echo '=== Pipeline terminé ==='
         }
         success {
-            echo '✅ BUILD SUCCESS ! Toutes les étapes sont passées.'
+            echo '✅ BUILD SUCCESS !'
         }
         failure {
-            echo '❌ BUILD FAILED ! Vérifiez les logs ci-dessus.'
+            echo '❌ BUILD FAILED !'
         }
     }
 }
