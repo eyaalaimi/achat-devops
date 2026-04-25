@@ -2,8 +2,14 @@ pipeline {
     agent any
     
     tools {
+<<<<<<< HEAD
         maven 'Maven3'   // À configurer dans Jenkins : Manage Jenkins → Tools
         jdk 'JDK21'      // À configurer dans Jenkins : Manage Jenkins → Tools
+=======
+        // Ces noms doivent correspondre à ceux configurés dans Jenkins (Outils)
+        maven 'Maven3'   // Le nom que vous avez donné dans Configuration des outils
+        jdk 'JDK21'      // Le nom que vous avez donné dans Configuration des outils
+>>>>>>> c310be17e0dafc07ffa40f5ff1b992b7c96c21d6
     }
     
     stages {
