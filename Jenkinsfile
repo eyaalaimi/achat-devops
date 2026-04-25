@@ -18,6 +18,12 @@ pipeline {
                     java -version
                     echo "Maven version:"
                     mvn --version
+                    echo ""
+                    echo "=== Structure du dépôt ==="
+                    ls -la
+                    echo ""
+                    echo "=== Dossier achat ==="
+                    ls -la achat/ || echo "Dossier achat non trouvé"
                 '''
             }
         }
@@ -25,7 +31,10 @@ pipeline {
         stage('Clean & Compile') {
             steps {
                 echo '=== Nettoyage et compilation du projet ==='
-                sh 'mvn clean compile'
+                // Se déplacer dans le dossier achat avant d'exécuter maven
+                dir('achat') {
+                    sh 'mvn clean compile'
+                }
                 echo 'Compilation terminée avec succès !'
             }
         }
@@ -33,7 +42,9 @@ pipeline {
         stage('Test') {
             steps {
                 echo '=== Exécution des tests ==='
-                sh 'mvn test'
+                dir('achat') {
+                    sh 'mvn test'
+                }
             }
             post {
                 always {
@@ -45,13 +56,16 @@ pipeline {
         stage('Package') {
             steps {
                 echo '=== Création du package ==='
-                sh 'mvn package -DskipTests'
+                dir('achat') {
+                    sh 'mvn package -DskipTests'
+                }
             }
         }
         
         stage('Archive') {
             steps {
-                archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
+                echo '=== Archivage des artefacts ==='
+                archiveArtifacts artifacts: 'achat/target/*.jar', allowEmptyArchive: true
             }
         }
     }
