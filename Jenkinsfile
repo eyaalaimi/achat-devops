@@ -4,7 +4,7 @@ pipeline {
     tools {
         // Ces noms doivent correspondre à ceux configurés dans Jenkins (Outils)
         maven 'Maven3'   // Le nom que vous avez donné dans Configuration des outils
-        jdk 'JDK11'      // Le nom que vous avez donné dans Configuration des outils
+        jdk 'JDK21'      // Le nom que vous avez donné dans Configuration des outils
     }
     
     stages {
