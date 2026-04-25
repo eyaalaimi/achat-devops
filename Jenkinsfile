@@ -1,17 +1,24 @@
 pipeline {
     agent any
     
-    tools {
-        maven 'Maven3'   // À configurer dans Jenkins : Manage Jenkins → Tools
-        jdk 'JDK21'      // À configurer dans Jenkins : Manage Jenkins → Tools
-    }
-    
     stages {
         stage('Checkout') {
             steps {
                 echo '=== Récupération du code depuis GitHub ==='
                 checkout scm
                 echo 'Code récupéré avec succès !'
+            }
+        }
+        
+        stage('Environment Info') {
+            steps {
+                echo '=== Informations environnement ==='
+                sh '''
+                    echo "Java version:"
+                    java -version
+                    echo "Maven version:"
+                    mvn --version
+                '''
             }
         }
         
@@ -25,9 +32,8 @@ pipeline {
         
         stage('Test') {
             steps {
-                echo '=== Exécution des tests unitaires ==='
+                echo '=== Exécution des tests ==='
                 sh 'mvn test'
-                echo 'Tests exécutés avec succès !'
             }
             post {
                 always {
@@ -38,13 +44,12 @@ pipeline {
         
         stage('Package') {
             steps {
-                echo '=== Création du package JAR ==='
+                echo '=== Création du package ==='
                 sh 'mvn package -DskipTests'
-                echo 'Package créé avec succès !'
             }
         }
         
-        stage('Archive Artifacts') {
+        stage('Archive') {
             steps {
                 archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
             }
