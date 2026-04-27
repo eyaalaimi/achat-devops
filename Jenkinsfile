@@ -17,7 +17,6 @@ pipeline {
         stage('Clean & Compile') {
             steps {
                 echo '=== Nettoyage et compilation ==='
-                // Se déplacer dans le dossier "achat" où se trouve pom.xml
                 dir('achat') {
                     sh 'mvn clean compile'
                 }
@@ -27,12 +26,30 @@ pipeline {
         stage('Test') {
             steps {
                 dir('achat') {
-                    sh 'mvn test'
+                    script {
+                        // Check if there are test files before running tests
+                        def testFiles = findFiles(glob: 'src/test/java/**/*.java')
+                        if (testFiles.size() > 0) {
+                            sh 'mvn test'
+                        } else {
+                            echo '⚠️ No test files found - skipping test execution'
+                        }
+                    }
                 }
             }
             post {
                 always {
-                    junit 'achat/target/surefire-reports/*.xml'
+                    script {
+                        dir('achat') {
+                            // Only publish if reports exist
+                            if (fileExists('target/surefire-reports/TEST-*.xml')) {
+                                junit 'target/surefire-reports/*.xml'
+                                echo '✅ Test reports published'
+                            } else {
+                                echo 'ℹ️ No test reports to publish'
+                            }
+                        }
+                    }
                 }
             }
         }
