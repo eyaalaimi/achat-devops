@@ -5,7 +5,6 @@
     
     <modelVersion>4.0.0</modelVersion>
     
-    <!-- Spring Boot Parent -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -13,7 +12,6 @@
         <relativePath/>
     </parent>
     
-    <!-- Coordonnées de votre projet -->
     <groupId>com.example</groupId>
     <artifactId>achat-devops</artifactId>
     <version>1.0.0-SNAPSHOT</version>
@@ -63,6 +61,31 @@
             <version>0.8.8</version>
             <scope>test</scope>
         </dependency>
+        
+        <!-- LOMBOK - AJOUTER CECI -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.30</version>
+            <scope>provided</scope>
+        </dependency>
+        
+        <!-- SWAGGER - AJOUTER CECI -->
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-boot-starter</artifactId>
+            <version>3.0.0</version>
+        </dependency>
     </dependencies>
     
     <build>
@@ -72,7 +95,6 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
             
-            <!-- Plugin Maven Surefire pour les tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -84,7 +106,6 @@
                 </configuration>
             </plugin>
             
-            <!-- Plugin JaCoCo pour la couverture de code -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -105,7 +126,6 @@
                 </executions>
             </plugin>
             
-            <!-- Plugin SonarQube -->
             <plugin>
                 <groupId>org.sonarsource.scanner.maven</groupId>
                 <artifactId>sonar-maven-plugin</artifactId>
@@ -114,7 +134,6 @@
         </plugins>
     </build>
     
-    <!-- Configuration pour le déploiement vers Nexus -->
     <distributionManagement>
         <repository>
             <id>nexus-releases</id>
