@@ -13,34 +13,31 @@ pipeline {
             }
         }
         
-        stage('Clean & Compile') {
+        stage('Find POM and Build') {
             steps {
-                echo '=== Nettoyage et compilation ==='
-                // Changez "backend" par le nom de votre sous-dossier
-                dir('backend') {
-                    sh 'mvn clean compile'
-                }
-            }
-        }
-        
-        stage('Test') {
-            steps {
-                dir('backend') {
-                    sh 'mvn test'
-                }
-            }
-            post {
-                always {
-                    junit '**/target/surefire-reports/*.xml'
-                }
-            }
-        }
-        
-        stage('SonarQube Analysis') {
-            steps {
-                dir('backend') {
-                    withSonarQubeEnv('sonar-server') {
-                        sh 'mvn sonar:sonar'
+                echo '=== Recherche du pom.xml et compilation ==='
+                script {
+                    // Trouver le dossier contenant pom.xml
+                    def pomDir = sh(script: "find . -name 'pom.xml' -printf '%h\n' | head -1", returnStdout: true).trim()
+                    echo "pom.xml trouvé dans : ${pomDir}"
+                    
+                    if (pomDir.isEmpty()) {
+                        error "Aucun fichier pom.xml trouvé dans le projet !"
+                    }
+                    
+                    // Se déplacer dans le dossier du pom.xml et exécuter Maven
+                    dir(pomDir) {
+                        sh 'mvn clean compile'
+                        sh 'mvn test'
+                        sh 'mvn package -DskipTests'
+                        
+                        // SonarQube
+                        withSonarQubeEnv('sonar-server') {
+                            sh 'mvn sonar:sonar'
+                        }
+                        
+                        // Déploiement Nexus
+                        sh 'mvn deploy -DskipTests'
                     }
                 }
             }
@@ -48,24 +45,9 @@ pipeline {
         
         stage('Quality Gate') {
             steps {
+                echo '=== Vérification Quality Gate ==='
                 timeout(time: 5, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
-                }
-            }
-        }
-        
-        stage('Package') {
-            steps {
-                dir('backend') {
-                    sh 'mvn package -DskipTests'
-                }
-            }
-        }
-        
-        stage('Deploy to Nexus') {
-            steps {
-                dir('backend') {
-                    sh 'mvn deploy -DskipTests'
                 }
             }
         }
