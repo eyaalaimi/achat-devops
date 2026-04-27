@@ -3,6 +3,7 @@ pipeline {
     
     environment {
         SONAR_HOST_URL = "http://172.10.0.140:9000"
+        MAVEN_OPTS = "-Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true"
     }
     
     stages {
@@ -13,31 +14,35 @@ pipeline {
             }
         }
         
-        stage('Find POM and Build') {
+        stage('Clean & Compile') {
             steps {
-                echo '=== Recherche du pom.xml et compilation ==='
-                script {
-                    // Trouver le dossier contenant pom.xml
-                    def pomDir = sh(script: "find . -name 'pom.xml' -printf '%h\n' | head -1", returnStdout: true).trim()
-                    echo "pom.xml trouvé dans : ${pomDir}"
-                    
-                    if (pomDir.isEmpty()) {
-                        error "Aucun fichier pom.xml trouvé dans le projet !"
-                    }
-                    
-                    // Se déplacer dans le dossier du pom.xml et exécuter Maven
-                    dir(pomDir) {
-                        sh 'mvn clean compile'
-                        sh 'mvn test'
-                        sh 'mvn package -DskipTests'
-                        
-                        // SonarQube
-                        withSonarQubeEnv('sonar-server') {
-                            sh 'mvn sonar:sonar'
-                        }
-                        
-                        // Déploiement Nexus
-                        sh 'mvn deploy -DskipTests'
+                echo '=== Nettoyage et compilation ==='
+                // Se déplacer dans le dossier "achat" où se trouve pom.xml
+                dir('achat') {
+                    sh 'mvn clean compile'
+                }
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                dir('achat') {
+                    sh 'mvn test'
+                }
+            }
+            post {
+                always {
+                    junit 'achat/target/surefire-reports/*.xml'
+                }
+            }
+        }
+        
+        stage('SonarQube Analysis') {
+            steps {
+                echo '=== Analyse SonarQube ==='
+                dir('achat') {
+                    withSonarQubeEnv('sonar-server') {
+                        sh 'mvn sonar:sonar'
                     }
                 }
             }
@@ -51,14 +56,35 @@ pipeline {
                 }
             }
         }
+        
+        stage('Package') {
+            steps {
+                dir('achat') {
+                    sh 'mvn package -DskipTests'
+                }
+            }
+        }
+        
+        stage('Deploy to Nexus') {
+            steps {
+                echo '=== Déploiement vers Nexus ==='
+                dir('achat') {
+                    sh 'mvn deploy -DskipTests'
+                }
+            }
+        }
     }
     
     post {
         success {
-            echo '✅ PIPELINE RÉUSSI !'
+            echo '╔══════════════════════════════════════════════════════════╗'
+            echo '║     ✅ PIPELINE RÉUSSI !                                 ║'
+            echo '║     📊 SonarQube: http://172.10.0.140:9000              ║'
+            echo '║     📦 Nexus: http://172.10.0.140:8081                  ║'
+            echo '╚══════════════════════════════════════════════════════════╝'
         }
         failure {
-            echo '❌ PIPELINE ÉCHOUÉ !'
+            echo '❌ PIPELINE ÉCHOUÉ ! Vérifiez les logs.'
         }
     }
 }
