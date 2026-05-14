@@ -1,11 +1,6 @@
 pipeline {
     agent any
     
-    tools {
-        maven 'Maven-3'  // Make sure this matches your Maven installation name in Jenkins
-        jdk 'JDK-21'     // Make sure this matches your JDK installation name in Jenkins
-    }
-    
     stages {
         stage('📦 Checkout SCM') {
             steps {
@@ -18,52 +13,49 @@ pipeline {
         stage('🔨 Clean & Compile') {
             steps {
                 echo 'Compilation du projet...'
-                dir('achat') {  // ← ADD THIS
+                dir('achat') {
                     sh 'mvn clean compile'
-                }  // ← ADD THIS
+                }
             }
         }
         
         stage('🧪 Unit Tests') {
             steps {
-                dir('achat') {  // ← ADD THIS
+                dir('achat') {
                     sh 'mvn test'
-                }  // ← ADD THIS
+                }
             }
         }
         
         stage('📦 Package') {
             steps {
-                dir('achat') {  // ← ADD THIS
+                dir('achat') {
                     sh 'mvn package -DskipTests'
-                }  // ← ADD THIS
+                }
             }
         }
         
         stage('🔍 SonarQube Analysis') {
             steps {
-                dir('achat') {  // ← ADD THIS
+                dir('achat') {
                     echo 'SonarQube analysis - not configured yet'
-                    // sh 'mvn sonar:sonar'
-                }  // ← ADD THIS
+                }
             }
         }
         
         stage('🐳 Docker Build') {
             steps {
-                dir('achat') {  // ← ADD THIS
+                dir('achat') {
                     echo 'Docker build - will be added later'
-                    // sh 'docker build -t achat-app .'
-                }  // ← ADD THIS
+                }
             }
         }
         
         stage('📤 Nexus Publish') {
             steps {
-                dir('achat') {  // ← ADD THIS
+                dir('achat') {
                     echo 'Nexus publish - will be added later'
-                    // sh 'mvn deploy'
-                }  // ← ADD THIS
+                }
             }
         }
     }
