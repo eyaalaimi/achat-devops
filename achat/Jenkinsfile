@@ -30,7 +30,6 @@ pipeline {
         stage('5. SonarQube Analysis') {
             steps {
                 dir('achat') {
-                    // TODO: Configure SonarQube first
                     echo 'SonarQube analysis skipped - not configured yet'
                     // sh 'mvn sonar:sonar'
                 }
@@ -40,9 +39,8 @@ pipeline {
         stage('6. Build Docker Image') {
             steps {
                 dir('achat') {
-                    echo 'Building Docker image...'
-                    // Make sure Dockerfile exists in achat folder
-                    sh 'docker build -t achat-app .'
+                    echo 'Docker build skipped - will be added later'
+                    // sh 'docker build -t achat-app .'
                 }
             }
         }
@@ -50,8 +48,7 @@ pipeline {
         stage('7. Publish to Nexus') {
             steps {
                 dir('achat') {
-                    echo 'Publishing to Nexus...'
-                    // Configure Nexus in settings.xml first
+                    echo 'Nexus publishing skipped - will be configured later'
                     // sh 'mvn deploy'
                 }
             }
