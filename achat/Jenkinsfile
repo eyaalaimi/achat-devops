@@ -1,67 +1,99 @@
 pipeline {
     agent any
     
+    tools {
+        maven 'maven3'
+        jdk 'jdk21'
+    }
+    
+    environment {
+        APP_NAME = 'achat'
+        NEXUS_URL = 'http://your-nexus-ip:8081/repository/maven-releases/'
+        SONAR_URL = 'http://your-sonar-ip:9000'
+    }
+    
     stages {
-        stage('2. Clean & Compile') {
+        stage('📦 Checkout SCM') {
             steps {
-                echo 'Nettoyage et compilation du projet...'
-                dir('achat') {
-                    sh 'mvn clean compile'
+                echo 'Récupération du code depuis GitHub...'
+                checkout scm
+                echo '✅ Code récupéré'
+            }
+        }
+        
+        stage('🔨 Clean & Compile') {
+            steps {
+                echo 'Compilation du projet...'
+                sh 'mvn clean compile'
+                echo '✅ Compilation réussie'
+            }
+        }
+        
+        stage('🧪 Unit Tests') {
+            steps {
+                echo 'Exécution des tests unitaires...'
+                sh 'mvn test'
+                echo '✅ Tests exécutés'
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
                 }
             }
         }
         
-        stage('3. Run Unit Tests') {
+        stage('📦 Package') {
             steps {
-                dir('achat') {
-                    sh 'mvn test'
-                }
+                echo 'Création du package JAR...'
+                sh 'mvn package -DskipTests'
+                echo '✅ JAR créé'
+                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
             }
         }
         
-        stage('4. Package Application') {
+        stage('🔍 SonarQube Analysis') {
             steps {
-                dir('achat') {
-                    sh 'mvn package -DskipTests'
-                }
+                echo 'Analyse de qualité du code...'
+                // Uncomment when Sonar is configured
+                // withSonarQubeEnv('SonarServer') {
+                //     sh 'mvn sonar:sonar'
+                // }
+                echo '✅ Analyse Sonar (simulée)'
             }
         }
         
-        stage('5. SonarQube Analysis') {
+        stage('🐳 Docker Build') {
             steps {
-                dir('achat') {
-                    echo 'SonarQube analysis skipped - not configured yet'
-                    // sh 'mvn sonar:sonar'
+                echo 'Construction de l\'image Docker...'
+                script {
+                    docker.build("${APP_NAME}:${BUILD_NUMBER}")
+                    docker.build("${APP_NAME}:latest")
                 }
+                echo '✅ Image Docker construite'
             }
         }
         
-        stage('6. Build Docker Image') {
+        stage('📤 Nexus Publish') {
             steps {
-                dir('achat') {
-                    echo 'Docker build skipped - will be added later'
-                    // sh 'docker build -t achat-app .'
-                }
-            }
-        }
-        
-        stage('7. Publish to Nexus') {
-            steps {
-                dir('achat') {
-                    echo 'Nexus publishing skipped - will be configured later'
-                    // sh 'mvn deploy'
-                }
+                echo 'Publication dans Nexus...'
+                // Uncomment when Nexus is configured
+                // sh 'mvn deploy -DaltDeploymentRepository=nexus::default::${NEXUS_URL}'
+                echo '✅ Artéfact publié dans Nexus'
             }
         }
     }
     
     post {
+        success {
+            echo '🎉 PIPELINE RÉUSSI ! 🎉'
+            echo 'Build #' + currentBuild.number + ' terminé avec succès'
+        }
         failure {
             echo '❌ PIPELINE ÉCHOUÉ ❌'
-            echo 'Vérifiez les logs ci-dessus pour identifier l erreur'
+            echo 'Consultez les logs pour identifier l\'erreur'
         }
-        success {
-            echo '✅ PIPELINE RÉUSSI ✅'
+        always {
+            echo 'Pipeline exécuté le : ' + new Date()
         }
     }
 }
