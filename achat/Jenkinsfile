@@ -30,7 +30,7 @@ pipeline {
         stage('📊 SonarQube Analysis') {
             steps {
                 dir('achat') {
-                    withSonarQubeEnv('SonarQube') {
+                    withSonarQubeEnv('SonarServer') {
                         sh 'mvn sonar:sonar -Dsonar.login=squ_330e761a66e39ec648b2e9a0b815f9f6dfdcf25a'
                     }
                 }
