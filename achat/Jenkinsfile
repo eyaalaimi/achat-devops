@@ -1,6 +1,19 @@
 pipeline {
     agent any
     
+    tools {
+        maven 'maven3'
+        jdk 'jdk21'
+    }
+    
+    environment {
+        APP_NAME = 'achat'
+        VERSION = '1.0.0'
+        SONAR_HOST = 'http://<your-vm-ip>:9000'
+        SONAR_TOKEN = 'your-sonar-token-here'  // Replace with actual token
+        NEXUS_URL = 'http://<your-vm-ip>:8081/repository/maven-releases/'
+    }
+    
     stages {
         stage('📦 Checkout SCM') {
             steps {
@@ -13,63 +26,80 @@ pipeline {
         stage('🔨 Clean & Compile') {
             steps {
                 echo 'Compilation du projet...'
-                dir('achat') {
-                    sh 'mvn clean compile'
-                }
+                sh 'mvn clean compile'
+                echo '✅ Compilation réussie'
             }
         }
         
         stage('🧪 Unit Tests') {
             steps {
-                dir('achat') {
-                    sh 'mvn test'
+                echo 'Exécution des tests unitaires...'
+                sh 'mvn test'
+                echo '✅ Tests exécutés'
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
                 }
             }
         }
         
-        stage('📦 Package') {
+        stage('📊 SonarQube Analysis') {
             steps {
-                dir('achat') {
-                    sh 'mvn package -DskipTests'
-                }
+                echo 'Analyse de qualité du code avec SonarQube...'
+                sh '''
+                    mvn sonar:sonar \
+                        -Dsonar.host.url=${SONAR_HOST} \
+                        -Dsonar.login=${SONAR_TOKEN} \
+                        -Dsonar.java.binaries=target/classes
+                '''
+                echo '✅ Analyse SonarQube terminée'
+                echo '📈 Voir les résultats: ' + SONAR_HOST
             }
         }
         
-        stage('🔍 SonarQube Analysis') {
+        stage('📦 Package Application') {
             steps {
-                dir('achat') {
-                    echo 'SonarQube analysis - not configured yet'
-                }
+                echo 'Création du package JAR...'
+                sh 'mvn package -DskipTests'
+                echo '✅ Package créé: target/*.jar'
+                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
             }
         }
         
         stage('🐳 Docker Build') {
             steps {
-                dir('achat') {
-                    echo 'Docker build - will be added later'
+                echo 'Construction de l\'image Docker...'
+                script {
+                    docker.build("${APP_NAME}:${BUILD_NUMBER}")
                 }
+                echo '✅ Image Docker construite'
             }
         }
         
-        stage('📤 Nexus Publish') {
+        stage('📤 Publish to Nexus') {
             steps {
-                dir('achat') {
-                    echo 'Nexus publish - will be added later'
-                }
+                echo 'Publication de l\'artéfact dans Nexus...'
+                sh 'mvn deploy -DskipTests'
+                echo '✅ Artéfact publié dans Nexus'
+                echo '📦 Voir: ' + NEXUS_URL
             }
         }
     }
     
     post {
-        always {
-            echo "Pipeline exécuté le : ${new Date()}"
+        success {
+            echo '🎉 PIPELINE RÉUSSI ! 🎉'
+            echo 'Build #' + currentBuild.number
+            echo '📊 SonarQube: ' + SONAR_HOST
+            echo '📦 Nexus: ' + NEXUS_URL
         }
         failure {
             echo '❌ PIPELINE ÉCHOUÉ ❌'
-            echo 'Consultez les logs pour identifier l erreur'
+            echo 'Vérifiez les logs ci-dessus'
         }
-        success {
-            echo '✅ PIPELINE RÉUSSI ✅'
+        always {
+            echo 'Pipeline exécuté le : ' + new Date()
         }
     }
 }
