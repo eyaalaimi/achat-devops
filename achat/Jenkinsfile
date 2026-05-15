@@ -9,9 +9,9 @@ pipeline {
     environment {
         APP_NAME = 'achat'
         VERSION = '1.0.0'
-        SONAR_HOST = 'http://<your-vm-ip>:9000'
-        SONAR_TOKEN = 'your-sonar-token-here'  // Replace with actual token
-        NEXUS_URL = 'http://<your-vm-ip>:8081/repository/maven-releases/'
+        SONAR_HOST = 'http://172.10.0.140:9000'
+        SONAR_TOKEN = 'squ_d61fc6f4c6df7deb8bbb4fd263be7108ffe21eba'  // Replace with actual token
+        NEXUS_URL = 'http://172.10.0.140:8081/repository/maven-releases/'
     }
     
     stages {
