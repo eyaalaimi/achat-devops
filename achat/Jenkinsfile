@@ -30,8 +30,9 @@ pipeline {
         stage('📊 SonarQube Analysis') {
             steps {
                 dir('achat') {
-                    echo 'SonarQube analysis - will be configured later'
-                    sh 'mvn sonar:sonar'
+                    withSonarQubeEnv('SonarQube') {
+                        sh 'mvn sonar:sonar -Dsonar.login=YOUR_SONAR_TOKEN_HERE'
+                    }
                 }
             }
         }
@@ -48,7 +49,6 @@ pipeline {
             steps {
                 dir('achat') {
                     echo 'Docker build - will be added later'
-                    // sh 'docker build -t achat-app .'
                 }
             }
         }
@@ -57,7 +57,6 @@ pipeline {
             steps {
                 dir('achat') {
                     echo 'Nexus publish - will be configured later'
-                    // sh 'mvn deploy'
                 }
             }
         }
