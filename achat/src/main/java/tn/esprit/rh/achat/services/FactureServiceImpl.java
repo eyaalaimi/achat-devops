@@ -13,6 +13,7 @@ import tn.esprit.rh.achat.repositories.FactureRepository;
 import tn.esprit.rh.achat.repositories.FournisseurRepository;
 import tn.esprit.rh.achat.repositories.OperateurRepository;
 
+import java.util.Date;  // ← ADD THIS IMPORT
 import java.util.List;
 
 @Service
@@ -62,15 +63,6 @@ public class FactureServiceImpl implements IFactureService {
     }
 
     @Override
-    public Facture addFacture(Facture f, Long idFournisseur) {
-        Fournisseur fournisseur = fournisseurRepository.findById(idFournisseur).orElse(null);
-        if (fournisseur != null) {
-            f.setFournisseur(fournisseur);
-        }
-        return factureRepository.save(f);
-    }
-
-    @Override
     public List<Facture> getFacturesByFournisseur(Long idFournisseur) {
         Fournisseur fournisseur = fournisseurRepository.findById(idFournisseur).orElse(null);
         if (fournisseur != null) {
@@ -80,18 +72,7 @@ public class FactureServiceImpl implements IFactureService {
     }
 
     @Override
-    public void assignOperateurToFacture(Long idOperateur, Long idFacture) {
-        Facture facture = factureRepository.findById(idFacture).orElse(null);
-        Operateur operateur = operateurRepository.findById(idOperateur).orElse(null);
-        if (facture != null && operateur != null) {
-            facture.getOperateurs().add(operateur);
-            factureRepository.save(facture);
-        }
-    }
-
-    @Override
     public float getChiffreAffaireEntreDeuxDate(Date startDate, Date endDate) {
-        // Implementation for calculating revenue between two dates
         List<Facture> factures = factureRepository.findByDateFactureBetween(startDate, endDate);
         float total = 0;
         for (Facture facture : factures) {
@@ -108,33 +89,5 @@ public class FactureServiceImpl implements IFactureService {
             total += facture.getMontantFacture();
         }
         return total;
-    }
-
-    @Override
-    public List<Facture> getFacturesByOperateur(Long idOperateur) {
-        Operateur operateur = operateurRepository.findById(idOperateur).orElse(null);
-        if (operateur != null) {
-            return (List<Facture>) operateur.getFactures();
-        }
-        return null;
-    }
-
-    @Override
-    public Float getMontantFactureByFactureId(Long idFacture) {
-        Facture facture = factureRepository.findById(idFacture).orElse(null);
-        if (facture != null) {
-            return facture.getMontantFacture();
-        }
-        return null;
-    }
-
-    @Override
-    public Facture addFactureWithDetails(Facture facture, List<DetailFacture> details) {
-        facture = factureRepository.save(facture);
-        for (DetailFacture detail : details) {
-            detail.setFacture(facture);
-            detailFactureRepository.save(detail);
-        }
-        return facture;
     }
 }
