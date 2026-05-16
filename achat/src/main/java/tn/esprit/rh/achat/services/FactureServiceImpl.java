@@ -70,17 +70,18 @@ public class FactureServiceImpl implements IFactureService {
         }
     }
 
-    public float pourcentageRecouvrement(Date startDate, Date endDate) {
-        List<Facture> factures = factureRepository.findAll();
-        if (factures == null || factures.isEmpty()) {
-            return 0;
-        }
-        float total = 0;
-        for (Facture facture : factures) {
-            if (facture.getMontantFacture() != null) {
-                total += facture.getMontantFacture();
-            }
-        }
-        return total;
+  @Override
+public float pourcentageRecouvrement(Date startDate, Date endDate) {
+    List<Facture> factures = factureRepository.findAll();
+    if (factures.isEmpty()) {
+        return 0;
     }
+    float total = 0;
+    for (Facture facture : factures) {
+        if (facture.getMontantFacture() != null) {
+            total += facture.getMontantFacture();
+        }
+    }
+    return total;
+}
 }
