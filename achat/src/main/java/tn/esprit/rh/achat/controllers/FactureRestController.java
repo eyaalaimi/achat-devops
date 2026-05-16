@@ -80,7 +80,7 @@ public class FactureRestController {
     @ResponseBody
     public FactureDTO modifyFacture(@RequestBody FactureDTO factureDTO) {
         Facture entity = convertToEntity(factureDTO);
-        Facture updated = factureService.updateFacture(entity);
+        Facture updated = factureService.addFacture(entity);
         log.info("Modified facture with id: {}", updated.getIdFacture());
         return convertToDTO(updated);
     }
