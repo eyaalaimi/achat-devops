@@ -20,6 +20,8 @@ import java.util.Set;
 @ToString
 public class Facture implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idFacture;
@@ -34,6 +36,7 @@ public class Facture implements Serializable {
     private Set<DetailFacture> detailFactures;
     
     @ManyToOne
+    @JoinColumn(name = "fournisseur_id")
     private Fournisseur fournisseur;
     
     @ManyToMany
