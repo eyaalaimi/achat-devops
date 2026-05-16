@@ -13,6 +13,7 @@ import java.util.List;
 
 @Repository
 public interface FactureRepository extends JpaRepository<Facture, Long> {
+	List<Facture> findByFournisseurId(Long fournisseurId);
 
 	
 	@Query("SELECT f FROM Facture f where f.fournisseur=:fournisseur and f.archivee=false")
