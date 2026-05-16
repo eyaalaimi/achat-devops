@@ -3,79 +3,79 @@ package tn.esprit.rh.achat.controllers;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import tn.esprit.rh.achat.dto.ProduitDTO;
 import tn.esprit.rh.achat.entities.Produit;
 import tn.esprit.rh.achat.services.IProduitService;
 
 import java.util.List;
-
+import java.util.stream.Collectors;
 
 @RestController
-@CrossOrigin("*")
 @Api(tags = "Gestion des produits")
 @RequestMapping("/produit")
-public class ProduitRestController {
+public class ProduitController {
 
-	@Autowired
-	IProduitService produitService;
+    @Autowired
+    IProduitService produitService;
 
-	// http://localhost:8089/SpringMVC/produit/retrieve-all-produits
-	@GetMapping("/retrieve-all-produits")
-	@ResponseBody
-	public List<Produit> getProduits() {
-    return produitService.retrieveAllProduits();
-	}
+    // Convert Entity to DTO
+    private ProduitDTO convertToDTO(Produit entity) {
+        if (entity == null) return null;
+        return new ProduitDTO(
+            entity.getIdProduit(),
+            entity.getCode(),
+            entity.getLibelle(),
+            entity.getPrixUnitaire(),
+            entity.getQuantite()
+        );
+    }
 
-	// http://localhost:8089/SpringMVC/produit/retrieve-produit/8
-	@GetMapping("/retrieve-produit/{produit-id}")
-	@ResponseBody
-	public Produit retrieveRayon(@PathVariable("produit-id") Long produitId) {
-		return produitService.retrieveProduit(produitId);
-	}
+    // Convert DTO to Entity
+    private Produit convertToEntity(ProduitDTO dto) {
+        if (dto == null) return null;
+        Produit entity = new Produit();
+        entity.setIdProduit(dto.getIdProduit());
+        entity.setCode(dto.getCode());
+        entity.setLibelle(dto.getLibelle());
+        entity.setPrixUnitaire(dto.getPrixUnitaire());
+        entity.setQuantite(dto.getQuantite());
+        return entity;
+    }
 
-	/* Ajouter en produit tout en lui affectant la catégorie produit et le stock associés */
-	// http://localhost:8089/SpringMVC/produit/add-produit/{idCategorieProduit}/{idStock}
-	@PostMapping("/add-produit")
-	@ResponseBody
-	public Produit addProduit(@RequestBody Produit p) {
-		Produit produit = produitService.addProduit(p);
-		return produit;
-	}
+    @GetMapping("/retrieve-all-produits")
+    @ResponseBody
+    public List<ProduitDTO> getProduits() {
+        return produitService.retrieveAllProduits()
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
 
-	// http://localhost:8089/SpringMVC/produit/remove-produit/{produit-id}
-	@DeleteMapping("/remove-produit/{produit-id}")
-	@ResponseBody
-	public void removeProduit(@PathVariable("produit-id") Long produitId) {
-		produitService.deleteProduit(produitId);
-	}
+    @GetMapping("/retrieve-produit/{produit-id}")
+    @ResponseBody
+    public ProduitDTO retrieveProduit(@PathVariable("produit-id") Long produitId) {
+        return convertToDTO(produitService.retrieveProduit(produitId));
+    }
 
-	// http://localhost:8089/SpringMVC/produit/modify-produit/{idCategorieProduit}/{idStock}
-	@PutMapping("/modify-produit")
-	@ResponseBody
-	public Produit modifyProduit(@RequestBody Produit p) {
-		return produitService.updateProduit(p);
-	}
+    @PostMapping("/add-produit")
+    @ResponseBody
+    public ProduitDTO addProduit(@RequestBody ProduitDTO produitDTO) {
+        Produit entity = convertToEntity(produitDTO);
+        Produit saved = produitService.addProduit(entity);
+        return convertToDTO(saved);
+    }
 
-	/*
-	 * Si le responsable magasin souhaite modifier le stock du produit il peut
-	 * le faire en l'affectant au stock en question
-	 */
-	// http://localhost:8089/SpringMVC/produit/assignProduitToStock/1/5
-	@PutMapping(value = "/assignProduitToStock/{idProduit}/{idStock}")
-	public void assignProduitToStock(@PathVariable("idProduit") Long idProduit, @PathVariable("idStock") Long idStock) {
-		produitService.assignProduitToStock(idProduit, idStock);
-	}
+    @DeleteMapping("/remove-produit/{produit-id}")
+    @ResponseBody
+    public void removeProduit(@PathVariable("produit-id") Long produitId) {
+        produitService.deleteProduit(produitId);
+    }
 
-	/*
-	 * Revenu Brut d'un produit (qte * prix unitaire de toutes les lignes du
-	 * detailFacture du produit envoyé en paramètre )
-	 */
-	// http://localhost:8089/SpringMVC/produit/getRevenuBrutProduit/1/{startDate}/{endDate}
-/*	@GetMapping(value = "/getRevenuBrutProduit/{idProduit}/{startDate}/{endDate}")
-	public float getRevenuBrutProduit(@PathVariable("idProduit") Long idProduit,
-			@PathVariable(name = "startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
-			@PathVariable(name = "endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate) {
-
-		return produitService.getRevenuBrutProduit(idProduit, startDate, endDate);
-	}*/
-
+    @PutMapping("/modify-produit")
+    @ResponseBody
+    public ProduitDTO modifyProduit(@RequestBody ProduitDTO produitDTO) {
+        Produit entity = convertToEntity(produitDTO);
+        Produit updated = produitService.updateProduit(entity);
+        return convertToDTO(updated);
+    }
 }
