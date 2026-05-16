@@ -37,12 +37,12 @@ public class FactureRestController {
     @DeleteMapping("/remove-facture/{facture-id}")
     @ResponseBody
     public void removeFacture(@PathVariable("facture-id") Long factureId) {
-        factureService.deleteFacture(factureId);
+        factureService.deleteById(factureId);
     }
 
     @PutMapping("/modify-facture")
     @ResponseBody
     public Facture modifyFacture(@RequestBody Facture facture) {
-        return factureService.updateFacture(facture);
+        return factureService.save(facture);
     }
 }
