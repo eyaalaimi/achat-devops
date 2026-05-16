@@ -19,9 +19,8 @@ public class OperateurServiceImpl implements IOperateurService {
 
 	@Override
 	public Operateur addOperateur(Operateur o) {
-		operateurRepository.save(o);
-		return o;
-	}
+    return operateurRepository.save(o);
+}
 
 	@Override
 	public void deleteOperateur(Long id) {
@@ -31,14 +30,23 @@ public class OperateurServiceImpl implements IOperateurService {
 
 	@Override
 	public Operateur updateOperateur(Operateur o) {
-		operateurRepository.save(o);
-		return o;
-	}
+    if (o == null || o.getIdOperateur() == null) {
+        log.warn("Cannot update null operateur or operateur without ID");
+        return null;
+    }
+    Operateur existing = operateurRepository.findById(o.getIdOperateur()).orElse(null);
+    if (existing == null) {
+        log.warn("Operateur not found with id: {}", o.getIdOperateur());
+        return null;
+    }
+    existing.setNom(o.getNom());
+    existing.setPrenom(o.getPrenom());
+    existing.setPassword(o.getPassword());
+    return operateurRepository.save(existing);
+}
 
 	@Override
 	public Operateur retrieveOperateur(Long id) {
-		Operateur operateur = operateurRepository.findById(id).orElse(null);
-		return operateur;
-	}
-
+    return operateurRepository.findById(id).orElse(null);
+}
 }
