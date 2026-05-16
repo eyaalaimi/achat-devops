@@ -17,6 +17,8 @@ import java.io.Serializable;
 @ToString
 public class Produit implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idProduit;
@@ -27,5 +29,10 @@ public class Produit implements Serializable {
     private Integer quantite;
     
     @ManyToOne
+    @JoinColumn(name = "stock_id")
     private Stock stock;
+    
+    @ManyToOne
+    @JoinColumn(name = "categorie_produit_id")
+    private CategorieProduit categorieProduit;
 }
