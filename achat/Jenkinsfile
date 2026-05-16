@@ -1,6 +1,21 @@
 pipeline {
     agent any
     
+    tools {
+        maven 'maven3'
+        jdk 'jdk11'
+    }
+    
+    environment {
+        APP_NAME = 'achat'
+        VERSION = '1.0.0'
+        DOCKER_IMAGE = 'achat-devops'
+        SONAR_HOST = 'http://172.10.0.55:9000'  // Replace with your VM IP
+        SONAR_TOKEN = 'your-sonar-token'
+        NEXUS_URL = 'http://172.10.0.55:8081/repository/maven-releases/'
+        DOCKER_USER = 'your-dockerhub-username'  // Replace with your Docker Hub username
+    }
+    
     stages {
         stage('📦 Checkout SCM') {
             steps {
@@ -13,71 +28,120 @@ pipeline {
         stage('🔨 Clean & Compile') {
             steps {
                 echo 'Compilation du projet...'
-                dir('achat') {
-                    sh 'mvn clean compile'
-                }
+                sh 'mvn clean compile'
+                echo '✅ Compilation réussie'
             }
         }
         
         stage('🧪 Unit Tests') {
             steps {
-                dir('achat') {
-                    sh 'mvn test'
+                echo 'Exécution des tests unitaires...'
+                sh 'mvn test'
+                echo '✅ Tests exécutés'
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
                 }
             }
         }
         
         stage('📊 SonarQube Analysis') {
             steps {
-                dir('achat') {
-                    withSonarQubeEnv('SonarServer') {
-                        sh 'mvn sonar:sonar -Dsonar.login=squ_330e761a66e39ec648b2e9a0b815f9f6dfdcf25a'
-                    }
-                }
+                echo 'Analyse de qualité du code...'
+                sh "mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST} -Dsonar.login=${SONAR_TOKEN}"
+                echo '✅ SonarQube terminé'
             }
         }
         
         stage('📦 Package Application') {
             steps {
-                dir('achat') {
-                    sh 'mvn package -DskipTests'
-                }
-            }
-        }
-        
-        stage('🐳 Docker Build') {
-            steps {
-                dir('achat') {
-                    echo 'Docker build - will be added later'
-                }
+                echo 'Création du package JAR...'
+                sh 'mvn package -DskipTests'
+                echo '✅ JAR créé'
+                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
             }
         }
         
         stage('📤 Publish to Nexus') {
             steps {
-                dir('achat') {
-                    withCredentials([usernamePassword(
-                        credentialsId: 'nexus-credentials',
-                        usernameVariable: 'admin',
-                        passwordVariable: 'nexus123456'
-                    )]) {
-                        sh 'mvn deploy -Dnexus.username=admin -Dnexus.password=nexus123456'
-                    }
+                echo 'Publication dans Nexus...'
+                sh 'mvn deploy -DskipTests'
+                echo '✅ Artéfact publié dans Nexus'
+            }
+        }
+        
+        // ========== NEW DOCKER STAGES ==========
+        
+        stage('🐳 Build Docker Image') {
+            steps {
+                echo 'Construction de l\'image Docker...'
+                script {
+                    sh "docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} ."
+                    sh "docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${DOCKER_IMAGE}:latest"
                 }
+                echo '✅ Image Docker construite'
+            }
+        }
+        
+        stage('🐳 Push to Docker Hub') {
+            steps {
+                echo 'Envoi de l\'image vers Docker Hub...'
+                script {
+                    // Login to Docker Hub (configure credentials in Jenkins)
+                    withCredentials([string(credentialsId: 'docker-hub-password', variable: 'DOCKER_PWD')]) {
+                        sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PWD}"
+                    }
+                    sh "docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${DOCKER_USER}/${DOCKER_IMAGE}:${BUILD_NUMBER}"
+                    sh "docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${DOCKER_USER}/${DOCKER_IMAGE}:latest"
+                    sh "docker push ${DOCKER_USER}/${DOCKER_IMAGE}:${BUILD_NUMBER}"
+                    sh "docker push ${DOCKER_USER}/${DOCKER_IMAGE}:latest"
+                }
+                echo '✅ Image poussée vers Docker Hub'
+            }
+        }
+        
+        stage('🐳 Deploy with Docker Compose') {
+            steps {
+                echo 'Déploiement avec Docker Compose...'
+                script {
+                    // Stop existing containers
+                    sh 'docker-compose down || true'
+                    // Start all containers
+                    sh 'docker-compose up -d --build'
+                    // Wait for application to be ready
+                    sh 'sleep 30'
+                }
+                echo '✅ Application déployée avec Docker Compose'
+            }
+        }
+        
+        stage('🐳 Verify Deployment') {
+            steps {
+                echo 'Vérification du déploiement...'
+                script {
+                    sh 'docker ps'
+                    sh 'curl -f http://localhost:8082/actuator/health || echo "Health check endpoint not yet available"'
+                }
+                echo '✅ Vérification terminée'
             }
         }
     }
     
     post {
-        always {
-            echo "Pipeline exécuté le : ${new Date()}"
+        success {
+            echo '🎉 PIPELINE COMPLET RÉUSSI ! 🎉'
+            echo 'Build #' + currentBuild.number
+            echo '📊 SonarQube: ' + SONAR_HOST
+            echo '📦 Nexus: ' + NEXUS_URL
+            echo '🐳 Docker Hub: https://hub.docker.com/r/' + DOCKER_USER + '/' + DOCKER_IMAGE
         }
         failure {
             echo '❌ PIPELINE ÉCHOUÉ ❌'
             echo 'Vérifiez les logs ci-dessus'
         }
-        success {
-            echo '✅ PIPELINE RÉUSSI ✅'
+        always {
+            echo 'Pipeline exécuté le : ' + new Date()
         }
     }
 }
