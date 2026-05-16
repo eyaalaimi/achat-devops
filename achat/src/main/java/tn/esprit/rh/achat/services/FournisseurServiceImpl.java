@@ -30,14 +30,14 @@ public class FournisseurServiceImpl implements IFournisseurService {
 	SecteurActiviteRepository secteurActiviteRepository;
 	private static final Logger log = LoggerFactory.getLogger(FournisseurServiceImpl.class);
 	@Override
+	@Override
 	public List<Fournisseur> retrieveAllFournisseurs() {
-		List<Fournisseur> fournisseurs = (List<Fournisseur>) fournisseurRepository.findAll();
-		for (Fournisseur fournisseur : fournisseurs) {
-			log.info(" fournisseur : " + fournisseur);
-		}
-		return fournisseurs;
-	}
-
+   	 List<Fournisseur> fournisseurs = fournisseurRepository.findAll();
+    	for (Fournisseur fournisseur : fournisseurs) {
+        	log.info("fournisseur : {}", fournisseur);
+    }
+    return fournisseurs;
+}
 
 	public Fournisseur addFournisseur(Fournisseur f /*Master*/) {
 		DetailFournisseur df= new DetailFournisseur();//Slave
