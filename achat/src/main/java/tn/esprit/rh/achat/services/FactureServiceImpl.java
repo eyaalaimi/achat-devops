@@ -1,119 +1,140 @@
 package tn.esprit.rh.achat.services;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import tn.esprit.rh.achat.entities.*;
-import tn.esprit.rh.achat.repositories.*;
-
-import javax.transaction.Transactional;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import tn.esprit.rh.achat.entities.DetailFacture;
+import tn.esprit.rh.achat.entities.Facture;
+import tn.esprit.rh.achat.entities.Fournisseur;
+import tn.esprit.rh.achat.entities.Operateur;
+import tn.esprit.rh.achat.repositories.DetailFactureRepository;
+import tn.esprit.rh.achat.repositories.FactureRepository;
+import tn.esprit.rh.achat.repositories.FournisseurRepository;
+import tn.esprit.rh.achat.repositories.OperateurRepository;
+
+import java.util.List;
+
 @Service
-@Slf4j
-@Transactional
 public class FactureServiceImpl implements IFactureService {
 
-	@Autowired
-	FactureRepository factureRepository;
-	@Autowired
-	OperateurRepository operateurRepository;
-	@Autowired
-	DetailFactureRepository detailFactureRepository;
-	@Autowired
-	FournisseurRepository fournisseurRepository;
-	@Autowired
-	ProduitRepository produitRepository;
+    private static final Logger log = LoggerFactory.getLogger(FactureServiceImpl.class);
+
     @Autowired
-    ReglementServiceImpl reglementService;
-	 private static final Logger log = LoggerFactory.getLogger(FactureServiceImpl.class);
-	
-	@Override
-	public List<Facture> retrieveAllFactures() {
-		List<Facture> factures = (List<Facture>) factureRepository.findAll();
-		for (Facture facture : factures) {
-			log.info(" facture : " + facture);
-		}
-		return factures;
-	}
+    FactureRepository factureRepository;
+    
+    @Autowired
+    DetailFactureRepository detailFactureRepository;
+    
+    @Autowired
+    FournisseurRepository fournisseurRepository;
+    
+    @Autowired
+    OperateurRepository operateurRepository;
 
-	
-	public Facture addFacture(Facture f) {
-		return factureRepository.save(f);
-	}
+    @Override
+    public List<Facture> retrieveAllFactures() {
+        List<Facture> factures = factureRepository.findAll();
+        for (Facture facture : factures) {
+            log.info("facture : {}", facture);
+        }
+        return factures;
+    }
 
-	/*
-	 * calculer les montants remise et le montant total d'un détail facture
-	 * ainsi que les montants d'une facture
-	 */
-	private Facture addDetailsFacture(Facture f, Set<DetailFacture> detailsFacture) {
-		float montantFacture = 0;
-		float montantRemise = 0;
-		for (DetailFacture detail : detailsFacture) {
-			//Récuperer le produit 
-			Produit produit = produitRepository.findById(detail.getProduit().getIdProduit()).get();
-			//Calculer le montant total pour chaque détail Facture
-			float prixTotalDetail = detail.getQteCommandee() * produit.getPrix();
-			//Calculer le montant remise pour chaque détail Facture
-			float montantRemiseDetail = (prixTotalDetail * detail.getPourcentageRemise()) / 100;
-			float prixTotalDetailRemise = prixTotalDetail - montantRemiseDetail;
-			detail.setMontantRemise(montantRemiseDetail);
-			detail.setPrixTotalDetail(prixTotalDetailRemise);
-			//Calculer le montant total pour la facture
-			montantFacture = montantFacture + prixTotalDetailRemise;
-			//Calculer le montant remise pour la facture
-			montantRemise = montantRemise + montantRemiseDetail;
-			detailFactureRepository.save(detail);
-		}
-		f.setMontantFacture(montantFacture);
-		f.setMontantRemise(montantRemise);
-		return f;
-	}
+    @Override
+    public Facture addFacture(Facture f) {
+        return factureRepository.save(f);
+    }
 
-	@Override
-	public void cancelFacture(Long factureId) {
-		// Méthode 01
-		//Facture facture = factureRepository.findById(factureId).get();
-		Facture facture = factureRepository.findById(factureId).orElse(new Facture());
-		facture.setActive(true);
-		factureRepository.save(facture);
-		//Méthode 02 (Avec JPQL)
-		factureRepository.updateFacture(factureId);
-	}
+    @Override
+    public Facture updateFacture(Facture f) {
+        return factureRepository.save(f);
+    }
 
-	@Override
-	public Facture retrieveFacture(Long factureId) {
+    @Override
+    public Facture retrieveFacture(Long id) {
+        return factureRepository.findById(id).orElse(null);
+    }
 
-		Facture facture = factureRepository.findById(factureId).orElse(null);
-		log.info("facture :" + facture);
-		return facture;
-	}
+    @Override
+    public void deleteFacture(Long id) {
+        factureRepository.deleteById(id);
+    }
 
-	@Override
-	public List<Facture> getFacturesByFournisseur(Long idFournisseur) {
-		Fournisseur fournisseur = fournisseurRepository.findById(idFournisseur).orElse(null);
-		return (List<Facture>) fournisseur.getFactures();
-	}
+    @Override
+    public Facture addFacture(Facture f, Long idFournisseur) {
+        Fournisseur fournisseur = fournisseurRepository.findById(idFournisseur).orElse(null);
+        if (fournisseur != null) {
+            f.setFournisseur(fournisseur);
+        }
+        return factureRepository.save(f);
+    }
 
-	@Override
-	public void assignOperateurToFacture(Long idOperateur, Long idFacture) {
-		Facture facture = factureRepository.findById(idFacture).orElse(null);
-		Operateur operateur = operateurRepository.findById(idOperateur).orElse(null);
-		operateur.getFactures().add(facture);
-		operateurRepository.save(operateur);
-	}
+    @Override
+    public List<Facture> getFacturesByFournisseur(Long idFournisseur) {
+        Fournisseur fournisseur = fournisseurRepository.findById(idFournisseur).orElse(null);
+        if (fournisseur != null) {
+            return fournisseur.getFactures();
+        }
+        return null;
+    }
 
-	@Override
-	public float pourcentageRecouvrement(Date startDate, Date endDate) {
-		float totalFacturesEntreDeuxDates = factureRepository.getTotalFacturesEntreDeuxDates(startDate,endDate);
-		float totalRecouvrementEntreDeuxDates =reglementService.getChiffreAffaireEntreDeuxDate(startDate,endDate);
-		float pourcentage=(totalRecouvrementEntreDeuxDates/totalFacturesEntreDeuxDates)*100;
-		return pourcentage;
-	}
-	
+    @Override
+    public void assignOperateurToFacture(Long idOperateur, Long idFacture) {
+        Facture facture = factureRepository.findById(idFacture).orElse(null);
+        Operateur operateur = operateurRepository.findById(idOperateur).orElse(null);
+        if (facture != null && operateur != null) {
+            facture.getOperateurs().add(operateur);
+            factureRepository.save(facture);
+        }
+    }
 
+    @Override
+    public float getChiffreAffaireEntreDeuxDate(Date startDate, Date endDate) {
+        // Implementation for calculating revenue between two dates
+        List<Facture> factures = factureRepository.findByDateFactureBetween(startDate, endDate);
+        float total = 0;
+        for (Facture facture : factures) {
+            total += facture.getMontantFacture();
+        }
+        return total;
+    }
+
+    @Override
+    public float getMontantFactureEntreDeuxDate(Date startDate, Date endDate) {
+        List<Facture> factures = factureRepository.findByDateFactureBetween(startDate, endDate);
+        float total = 0;
+        for (Facture facture : factures) {
+            total += facture.getMontantFacture();
+        }
+        return total;
+    }
+
+    @Override
+    public List<Facture> getFacturesByOperateur(Long idOperateur) {
+        Operateur operateur = operateurRepository.findById(idOperateur).orElse(null);
+        if (operateur != null) {
+            return (List<Facture>) operateur.getFactures();
+        }
+        return null;
+    }
+
+    @Override
+    public Float getMontantFactureByFactureId(Long idFacture) {
+        Facture facture = factureRepository.findById(idFacture).orElse(null);
+        if (facture != null) {
+            return facture.getMontantFacture();
+        }
+        return null;
+    }
+
+    @Override
+    public Facture addFactureWithDetails(Facture facture, List<DetailFacture> details) {
+        facture = factureRepository.save(facture);
+        for (DetailFacture detail : details) {
+            detail.setFacture(facture);
+            detailFactureRepository.save(detail);
+        }
+        return facture;
+    }
 }
