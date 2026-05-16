@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import tn.esprit.rh.achat.entities.Facture;
 import tn.esprit.rh.achat.repositories.FactureRepository;
 
-import java.util.Date;  // ← ADD THIS IMPORT
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -45,5 +45,20 @@ public class FactureServiceImpl implements IFactureService {
     @Override
     public void deleteFacture(Long id) {
         factureRepository.deleteById(id);
+    }
+
+    @Override
+    public float pourcentageRecouvrement(Date startDate, Date endDate) {
+        List<Facture> factures = factureRepository.findByDateFactureBetween(startDate, endDate);
+        if (factures == null || factures.isEmpty()) {
+            return 0;
+        }
+        float total = 0;
+        for (Facture facture : factures) {
+            if (facture.getMontantFacture() != null) {
+                total += facture.getMontantFacture();
+            }
+        }
+        return total;
     }
 }
