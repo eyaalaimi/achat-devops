@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import tn.esprit.rh.achat.entities.Facture;
 import tn.esprit.rh.achat.entities.Fournisseur;
 
-import java.util.Date;
+import java.util.Date; 
 import java.util.List;
 
 @Repository
