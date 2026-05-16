@@ -20,25 +20,22 @@ import java.util.Set;
 @ToString
 public class Facture implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idFacture;
-
+    
     private Float montantRemise;
     private Float montantFacture;
     private Date dateFacture;
     private Boolean active;
-
+    
     @JsonIgnore
     @OneToMany(mappedBy = "facture")
     private Set<DetailFacture> detailFactures;
-
+    
     @ManyToOne
-    @JoinColumn(name = "fournisseur_id")
     private Fournisseur fournisseur;
-
+    
     @ManyToMany
     @JsonIgnore
     private Set<Operateur> operateurs;
