@@ -5,7 +5,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tn.esprit.rh.achat.entities.Facture;
+import tn.esprit.rh.achat.entities.Operateur;
 import tn.esprit.rh.achat.repositories.FactureRepository;
+import tn.esprit.rh.achat.repositories.OperateurRepository;
 
 import java.util.Date;
 import java.util.List;
@@ -17,6 +19,9 @@ public class FactureServiceImpl implements IFactureService {
 
     @Autowired
     FactureRepository factureRepository;
+    
+    @Autowired
+    OperateurRepository operateurRepository;
 
     @Override
     public List<Facture> retrieveAllFactures() {
@@ -48,8 +53,19 @@ public class FactureServiceImpl implements IFactureService {
     }
 
     @Override
+    public void assignOperateurToFacture(Long idOperateur, Long idFacture) {
+        Facture facture = factureRepository.findById(idFacture).orElse(null);
+        Operateur operateur = operateurRepository.findById(idOperateur).orElse(null);
+        if (facture != null && operateur != null) {
+            facture.getOperateurs().add(operateur);
+            factureRepository.save(facture);
+            log.info("Assigned operateur {} to facture {}", idOperateur, idFacture);
+        }
+    }
+
+    @Override
     public float pourcentageRecouvrement(Date startDate, Date endDate) {
-        List<Facture> factures = factureRepository.findByDateFactureBetween(startDate, endDate);
+        List<Facture> factures = factureRepository.findAll();
         if (factures == null || factures.isEmpty()) {
             return 0;
         }
