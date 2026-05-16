@@ -3,10 +3,12 @@ package tn.esprit.rh.achat.controllers;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import tn.esprit.rh.achat.dto.FactureDTO;
 import tn.esprit.rh.achat.entities.Facture;
 import tn.esprit.rh.achat.services.IFactureService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @Api(tags = "Gestion des factures")
@@ -16,40 +18,64 @@ public class FactureRestController {
     @Autowired
     IFactureService factureService;
 
+    // Convert Entity to DTO
+    private FactureDTO convertToDTO(Facture entity) {
+        if (entity == null) return null;
+        FactureDTO dto = new FactureDTO();
+        dto.setIdFacture(entity.getIdFacture());
+        dto.setMontantRemise(entity.getMontantRemise());
+        dto.setMontantFacture(entity.getMontantFacture());
+        dto.setDateFacture(entity.getDateFacture());
+        dto.setActive(entity.getActive());
+        return dto;
+    }
+
+    // Convert DTO to Entity
+    private Facture convertToEntity(FactureDTO dto) {
+        if (dto == null) return null;
+        Facture entity = new Facture();
+        entity.setIdFacture(dto.getIdFacture());
+        entity.setMontantRemise(dto.getMontantRemise());
+        entity.setMontantFacture(dto.getMontantFacture());
+        entity.setDateFacture(dto.getDateFacture());
+        entity.setActive(dto.getActive());
+        return entity;
+    }
+
     @GetMapping("/retrieve-all-factures")
     @ResponseBody
-    public List<Facture> getFactures() {
-        return factureService.retrieveAllFactures();
+    public List<FactureDTO> getFactures() {
+        return factureService.retrieveAllFactures()
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/retrieve-facture/{facture-id}")
     @ResponseBody
-    public Facture retrieveFacture(@PathVariable("facture-id") Long factureId) {
-        return factureService.retrieveFacture(factureId);
+    public FactureDTO retrieveFacture(@PathVariable("facture-id") Long factureId) {
+        return convertToDTO(factureService.retrieveFacture(factureId));
     }
 
     @PostMapping("/add-facture")
     @ResponseBody
-    public Facture addFacture(@RequestBody Facture facture) {
-        return factureService.addFacture(facture);
+    public FactureDTO addFacture(@RequestBody FactureDTO factureDTO) {
+        Facture entity = convertToEntity(factureDTO);
+        Facture saved = factureService.addFacture(entity);
+        return convertToDTO(saved);
     }
 
-    // TODO: Fix delete method after checking service interface
     @DeleteMapping("/remove-facture/{facture-id}")
     @ResponseBody
     public void removeFacture(@PathVariable("facture-id") Long factureId) {
-        // Temporarily disabled - method name not found
-        System.out.println("Delete facture with id: " + factureId + " (method not implemented yet)");
-        // factureService.deleteFacture(factureId);
+        factureService.deleteFacture(factureId);
     }
 
-    // TODO: Fix update method after checking service interface
     @PutMapping("/modify-facture")
     @ResponseBody
-    public Facture modifyFacture(@RequestBody Facture facture) {
-        // Temporarily disabled - method name not found
-        System.out.println("Update facture: " + facture + " (method not implemented yet)");
-        return facture;
-        // return factureService.updateFacture(facture);
+    public FactureDTO modifyFacture(@RequestBody FactureDTO factureDTO) {
+        Facture entity = convertToEntity(factureDTO);
+        Facture updated = factureService.updateFacture(entity);
+        return convertToDTO(updated);
     }
 }
