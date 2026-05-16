@@ -1,38 +1,39 @@
 package tn.esprit.rh.achat.entities;
 
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
-public class Reglement implements Serializable{
-	private static final long serialVersionUID = 1L;
+public class Reglement implements Serializable {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long idReglement;
-	private float montantPaye;
-	private float montantRestant;
-	private Boolean payee;
-	@Temporal(TemporalType.DATE)
-	private Date dateReglement;
-	@ManyToOne
-	@JsonIgnore
-	private Facture facture;
-	
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long idReglement;
+    
+    private Float montantPaye;
+    private Float montantRestant;
+    private Boolean payee;
+    private Date dateReglement;
+
+    @ManyToOne
+    private Facture facture;
+
+    // Getters
+    public Long getIdReglement() { return idReglement; }
+    public Float getMontantPaye() { return montantPaye; }
+    public Float getMontantRestant() { return montantRestant; }
+    public Boolean getPayee() { return payee; }
+    public Date getDateReglement() { return dateReglement; }
+    public Facture getFacture() { return facture; }
+
+    // Setters
+    public void setIdReglement(Long idReglement) { this.idReglement = idReglement; }
+    public void setMontantPaye(Float montantPaye) { this.montantPaye = montantPaye; }
+    public void setMontantRestant(Float montantRestant) { this.montantRestant = montantRestant; }
+    public void setPayee(Boolean payee) { this.payee = payee; }
+    public void setDateReglement(Date dateReglement) { this.dateReglement = dateReglement; }
+    public void setFacture(Facture facture) { this.facture = facture; }
 }
