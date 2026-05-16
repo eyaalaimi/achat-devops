@@ -68,20 +68,24 @@ public class FournisseurServiceImpl implements IFournisseurService {
 
 	@Override
 	public Fournisseur retrieveFournisseur(Long fournisseurId) {
+    return fournisseurRepository.findById(fournisseurId).orElse(null);
+}
 
-		Fournisseur fournisseur = fournisseurRepository.findById(fournisseurId).orElse(null);
-		return fournisseur;
-	}
-
-	@Override
-	public void assignSecteurActiviteToFournisseur(Long idSecteurActivite, Long idFournisseur) {
-		Fournisseur fournisseur = fournisseurRepository.findById(idFournisseur).orElse(null);
-		SecteurActivite secteurActivite = secteurActiviteRepository.findById(idSecteurActivite).orElse(null);
-        fournisseur.getSecteurActivites().add(secteurActivite);
-        fournisseurRepository.save(fournisseur);
-		
-		
-	}
+public void assignSecteurActiviteToFournisseur(Long idSecteurActivite, Long idFournisseur) {
+    Fournisseur fournisseur = fournisseurRepository.findById(idFournisseur).orElse(null);
+    if (fournisseur == null) {
+        log.warn("Fournisseur not found with id: {}", idFournisseur);
+        return;
+    }
+    SecteurActivite secteurActivite = secteurActiviteRepository.findById(idSecteurActivite).orElse(null);
+    if (secteurActivite == null) {
+        log.warn("SecteurActivite not found with id: {}", idSecteurActivite);
+        return;
+    }
+    fournisseur.getSecteurActivites().add(secteurActivite);
+    fournisseurRepository.save(fournisseur);
+    log.info("Assigned secteurActivite {} to fournisseur {}", idSecteurActivite, idFournisseur);
+}
 
 	
 
