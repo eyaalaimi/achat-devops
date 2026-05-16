@@ -3,54 +3,77 @@ package tn.esprit.rh.achat.controllers;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import tn.esprit.rh.achat.dto.OperateurDTO;
 import tn.esprit.rh.achat.entities.Operateur;
 import tn.esprit.rh.achat.services.IOperateurService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
-@Api(tags = "Gestion des opérateurs")
+@Api(tags = "Gestion des operateurs")
 @RequestMapping("/operateur")
-@CrossOrigin("*")
 public class OperateurController {
 
-	@Autowired
-	IOperateurService operateurService;
-	
-	// http://localhost:8089/SpringMVC/operateur/retrieve-all-operateurs
-	@GetMapping("/retrieve-all-operateurs")
-	@ResponseBody
-	public List<Operateur> getOperateurs() {
-    	return operateurService.retrieveAllOperateurs();
-	}
-	// http://localhost:8089/SpringMVC/operateur/retrieve-operateur/8
-	@GetMapping("/retrieve-operateur/{operateur-id}")
-	@ResponseBody
-	public Operateur retrieveOperateur(@PathVariable("operateur-id") Long operateurId) {
-		return operateurService.retrieveOperateur(operateurId);
-	}
+    @Autowired
+    IOperateurService operateurService;
 
-	// http://localhost:8089/SpringMVC/operateur/add-operateur
-	@PostMapping("/add-operateur")
-	@ResponseBody
-	public Operateur addOperateur(@RequestBody Operateur op) {
-		Operateur operateur = operateurService.addOperateur(op);
-		return operateur;
-	}
+    // Convert Entity to DTO
+    private OperateurDTO convertToDTO(Operateur entity) {
+        if (entity == null) return null;
+        return new OperateurDTO(
+            entity.getIdOperateur(),
+            entity.getNom(),
+            entity.getPrenom(),
+            entity.getPassword()
+        );
+    }
 
-	// http://localhost:8089/SpringMVC/operateur/remove-operateur/{operateur-id}
-	@DeleteMapping("/remove-operateur/{operateur-id}")
-	@ResponseBody
-	public void removeOperateur(@PathVariable("operateur-id") Long operateurId) {
-		operateurService.deleteOperateur(operateurId);
-	}
+    // Convert DTO to Entity
+    private Operateur convertToEntity(OperateurDTO dto) {
+        if (dto == null) return null;
+        Operateur entity = new Operateur();
+        entity.setIdOperateur(dto.getIdOperateur());
+        entity.setNom(dto.getNom());
+        entity.setPrenom(dto.getPrenom());
+        entity.setPassword(dto.getPassword());
+        return entity;
+    }
 
-	// http://localhost:8089/SpringMVC/operateur/modify-operateur
-	@PutMapping("/modify-operateur")
-	@ResponseBody
-	public Operateur modifyOperateur(@RequestBody Operateur operateur) {
-		return operateurService.updateOperateur(operateur);
-	}
+    @GetMapping("/retrieve-all-operateurs")
+    @ResponseBody
+    public List<OperateurDTO> getOperateurs() {
+        return operateurService.retrieveAllOperateurs()
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
 
-	
+    @GetMapping("/retrieve-operateur/{operateur-id}")
+    @ResponseBody
+    public OperateurDTO retrieveOperateur(@PathVariable("operateur-id") Long operateurId) {
+        return convertToDTO(operateurService.retrieveOperateur(operateurId));
+    }
+
+    @PostMapping("/add-operateur")
+    @ResponseBody
+    public OperateurDTO addOperateur(@RequestBody OperateurDTO operateurDTO) {
+        Operateur entity = convertToEntity(operateurDTO);
+        Operateur saved = operateurService.addOperateur(entity);
+        return convertToDTO(saved);
+    }
+
+    @DeleteMapping("/remove-operateur/{operateur-id}")
+    @ResponseBody
+    public void removeOperateur(@PathVariable("operateur-id") Long operateurId) {
+        operateurService.deleteOperateur(operateurId);
+    }
+
+    @PutMapping("/modify-operateur")
+    @ResponseBody
+    public OperateurDTO modifyOperateur(@RequestBody OperateurDTO operateurDTO) {
+        Operateur entity = convertToEntity(operateurDTO);
+        Operateur updated = operateurService.updateOperateur(entity);
+        return convertToDTO(updated);
+    }
 }
