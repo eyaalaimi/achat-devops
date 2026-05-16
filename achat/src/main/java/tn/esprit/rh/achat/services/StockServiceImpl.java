@@ -9,6 +9,8 @@ import tn.esprit.rh.achat.repositories.StockRepository;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 @Slf4j
@@ -17,7 +19,7 @@ public class StockServiceImpl implements IStockService {
 	@Autowired
 	StockRepository stockRepository;
 
-
+	private static final Logger log = LoggerFactory.getLogger(StockServiceImpl.class);
 	@Override
 	public List<Stock> retrieveAllStocks() {
 		// récuperer la date à l'instant t1
