@@ -2,61 +2,80 @@ package tn.esprit.rh.achat.controllers;
 
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
+import tn.esprit.rh.achat.dto.ReglementDTO;
 import tn.esprit.rh.achat.entities.Reglement;
 import tn.esprit.rh.achat.services.IReglementService;
 
-import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @Api(tags = "Gestion des reglements")
 @RequestMapping("/reglement")
-@CrossOrigin("*")
-public class ReglementRestController {
+public class ReglementController {
 
     @Autowired
     IReglementService reglementService;
 
-
-    // http://localhost:8089/SpringMVC/reglement/add-reglement
-    @PostMapping("/add-reglement")
-    @ResponseBody
-    public Reglement addReglement(@RequestBody Reglement r) {
-        Reglement reglement = reglementService.addReglement(r);
-        return reglement;
+    // Convert Entity to DTO
+    private ReglementDTO convertToDTO(Reglement entity) {
+        if (entity == null) return null;
+        return new ReglementDTO(
+            entity.getIdReglement(),
+            entity.getMontantPaye(),
+            entity.getMontantRestant(),
+            entity.getPayee(),
+            entity.getDateReglement()
+        );
     }
+
+    // Convert DTO to Entity
+    private Reglement convertToEntity(ReglementDTO dto) {
+        if (dto == null) return null;
+        Reglement entity = new Reglement();
+        entity.setIdReglement(dto.getIdReglement());
+        entity.setMontantPaye(dto.getMontantPaye());
+        entity.setMontantRestant(dto.getMontantRestant());
+        entity.setPayee(dto.getPayee());
+        entity.setDateReglement(dto.getDateReglement());
+        return entity;
+    }
+
     @GetMapping("/retrieve-all-reglements")
     @ResponseBody
-    public List<Reglement> getReglement() {
-        List<Reglement> list = reglementService.retrieveAllReglements();
-        return list;
+    public List<ReglementDTO> getReglements() {
+        return reglementService.retrieveAllReglements()
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
-    // http://localhost:8089/SpringMVC/reglement/retrieve-reglement/8
     @GetMapping("/retrieve-reglement/{reglement-id}")
     @ResponseBody
-    public Reglement retrieveReglement(@PathVariable("reglement-id") Long reglementId) {
-        return reglementService.retrieveReglement(reglementId);
+    public ReglementDTO retrieveReglement(@PathVariable("reglement-id") Long reglementId) {
+        return convertToDTO(reglementService.retrieveReglement(reglementId));
     }
 
-    // http://localhost:8089/SpringMVC/reglement/retrieveReglementByFacture/8
-    @GetMapping("/retrieveReglementByFacture/{facture-id}")
+    @PostMapping("/add-reglement")
     @ResponseBody
-    public List<Reglement> retrieveReglementByFacture(@PathVariable("facture-id") Long factureId) {
-        return reglementService.retrieveReglementByFacture(factureId);
+    public ReglementDTO addReglement(@RequestBody ReglementDTO reglementDTO) {
+        Reglement entity = convertToEntity(reglementDTO);
+        Reglement saved = reglementService.addReglement(entity);
+        return convertToDTO(saved);
     }
 
-    // http://localhost:8089/SpringMVC/reglement/getChiffreAffaireEntreDeuxDate/{startDate}/{endDate}
-    @GetMapping(value = "/getChiffreAffaireEntreDeuxDate/{startDate}/{endDate}")
-    public float getChiffreAffaireEntreDeuxDate(
-            @PathVariable(name = "startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
-            @PathVariable(name = "endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate) {
-        try {
-            return reglementService.getChiffreAffaireEntreDeuxDate(startDate, endDate);
-        } catch (Exception e) {
-            return 0;
-        }
+    @DeleteMapping("/remove-reglement/{reglement-id}")
+    @ResponseBody
+    public void removeReglement(@PathVariable("reglement-id") Long reglementId) {
+        reglementService.deleteReglement(reglementId);
+    }
+
+    @PutMapping("/modify-reglement")
+    @ResponseBody
+    public ReglementDTO modifyReglement(@RequestBody ReglementDTO reglementDTO) {
+        Reglement entity = convertToEntity(reglementDTO);
+        Reglement updated = reglementService.updateReglement(entity);
+        return convertToDTO(updated);
     }
 }
