@@ -54,19 +54,26 @@ public class ProduitServiceImpl implements IProduitService {
 
 	@Override
 	public Produit retrieveProduit(Long produitId) {
-		Produit produit = produitRepository.findById(produitId).orElse(null);
-		log.info("produit :" + produit);
-		return produit;
-	}
+    Produit produit = produitRepository.findById(produitId).orElse(null);
+    log.info("produit : {}", produit);
+    return produit;
+}
 
 	@Override
 	public void assignProduitToStock(Long idProduit, Long idStock) {
-		Produit produit = produitRepository.findById(idProduit).orElse(null);
-		Stock stock = stockRepository.findById(idStock).orElse(null);
-		produit.setStock(stock);
-		produitRepository.save(produit);
-
-	}
-
+    Produit produit = produitRepository.findById(idProduit).orElse(null);
+    if (produit == null) {
+        log.warn("Produit not found with id: {}", idProduit);
+        return;
+    }
+    Stock stock = stockRepository.findById(idStock).orElse(null);
+    if (stock == null) {
+        log.warn("Stock not found with id: {}", idStock);
+        return;
+    }
+    produit.setStock(stock);
+    produitRepository.save(produit);
+    log.info("Assigned stock {} to produit {}", idStock, idProduit);
+}
 
 }
