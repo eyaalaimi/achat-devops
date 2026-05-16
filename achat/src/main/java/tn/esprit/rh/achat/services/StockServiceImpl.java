@@ -53,4 +53,21 @@ public class StockServiceImpl implements IStockService {
         stockRepository.deleteById(id);
         log.info("out of method deleteStock");
     }
+
+    @Override
+    public String retrieveStatusStock() {
+        List<Stock> stocks = stockRepository.findAll();
+        StringBuilder status = new StringBuilder();
+        for (Stock stock : stocks) {
+            if (stock.getQte() < stock.getQteMin()) {
+                status.append("Stock ").append(stock.getLibelleStock()).append(": LOW STOCK! Qte=")
+                      .append(stock.getQte()).append(", Min=").append(stock.getQteMin()).append("\n");
+                log.warn("Stock {} is below minimum level", stock.getLibelleStock());
+            } else {
+                status.append("Stock ").append(stock.getLibelleStock()).append(": OK. Qte=")
+                      .append(stock.getQte()).append(", Min=").append(stock.getQteMin()).append("\n");
+            }
+        }
+        return status.toString();
+    }
 }
