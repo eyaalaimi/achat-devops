@@ -53,6 +53,16 @@ public class FactureServiceImpl implements IFactureService {
     }
 
     @Override
+    public void cancelFacture(Long idFacture) {
+        Facture facture = factureRepository.findById(idFacture).orElse(null);
+        if (facture != null) {
+            facture.setActive(false);
+            factureRepository.save(facture);
+            log.info("Cancelled facture with id: {}", idFacture);
+        }
+    }
+
+    @Override
     public void assignOperateurToFacture(Long idOperateur, Long idFacture) {
         Facture facture = factureRepository.findById(idFacture).orElse(null);
         Operateur operateur = operateurRepository.findById(idOperateur).orElse(null);
