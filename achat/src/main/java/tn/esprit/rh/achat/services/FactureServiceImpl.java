@@ -76,7 +76,7 @@ public class FactureServiceImpl implements IFactureService {
 		// Méthode 01
 		//Facture facture = factureRepository.findById(factureId).get();
 		Facture facture = factureRepository.findById(factureId).orElse(new Facture());
-		facture.setArchivee(true);
+		facture.setActive(true);
 		factureRepository.save(facture);
 		//Méthode 02 (Avec JPQL)
 		factureRepository.updateFacture(factureId);
