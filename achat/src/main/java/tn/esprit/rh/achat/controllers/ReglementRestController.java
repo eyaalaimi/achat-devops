@@ -13,12 +13,11 @@ import java.util.stream.Collectors;
 @RestController
 @Api(tags = "Gestion des reglements")
 @RequestMapping("/reglement")
-public class ReglementController {
+public class ReglementRestController {
 
     @Autowired
     IReglementService reglementService;
 
-    // Convert Entity to DTO
     private ReglementDTO convertToDTO(Reglement entity) {
         if (entity == null) return null;
         return new ReglementDTO(
@@ -30,7 +29,6 @@ public class ReglementController {
         );
     }
 
-    // Convert DTO to Entity
     private Reglement convertToEntity(ReglementDTO dto) {
         if (dto == null) return null;
         Reglement entity = new Reglement();
