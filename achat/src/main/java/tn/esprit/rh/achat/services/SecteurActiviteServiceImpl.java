@@ -14,14 +14,14 @@ public class SecteurActiviteServiceImpl implements ISecteurActiviteService{
 	SecteurActiviteRepository secteurActiviteRepository;
 	@Override
 	public List<SecteurActivite> retrieveAllSecteurActivite() {
-		return (List<SecteurActivite>) secteurActiviteRepository.findAll();
-	}
+    return secteurActiviteRepository.findAll();
+}
 
 	@Override
 	public SecteurActivite addSecteurActivite(SecteurActivite sa) {
-		secteurActiviteRepository.save(sa);
-		return sa;
-	}
+    return secteurActiviteRepository.save(sa);
+}
+
 
 	@Override
 	public void deleteSecteurActivite(Long id) {
@@ -31,14 +31,20 @@ public class SecteurActiviteServiceImpl implements ISecteurActiviteService{
 
 	@Override
 	public SecteurActivite updateSecteurActivite(SecteurActivite sa) {
-		secteurActiviteRepository.save(sa);
-		return sa;
-	}
+    if (sa == null || sa.getIdSecteurActivite() == null) {
+        return null;
+    }
+    SecteurActivite existing = secteurActiviteRepository.findById(sa.getIdSecteurActivite()).orElse(null);
+    if (existing == null) {
+        return null;
+    }
+    existing.setCodeSecteur(sa.getCodeSecteur());
+    existing.setLibelleSecteur(sa.getLibelleSecteur());
+    return secteurActiviteRepository.save(existing);
+}
 
 	@Override
 	public SecteurActivite retrieveSecteurActivite(Long id) {
-		SecteurActivite secteurActivite = secteurActiviteRepository.findById(id).orElse(null);
-		return secteurActivite;
-	}
-
+    return secteurActiviteRepository.findById(id).orElse(null);
+}
 }
