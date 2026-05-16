@@ -4,16 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import tn.esprit.rh.achat.entities.DetailFacture;
 import tn.esprit.rh.achat.entities.Facture;
-import tn.esprit.rh.achat.entities.Fournisseur;
-import tn.esprit.rh.achat.entities.Operateur;
-import tn.esprit.rh.achat.repositories.DetailFactureRepository;
 import tn.esprit.rh.achat.repositories.FactureRepository;
-import tn.esprit.rh.achat.repositories.FournisseurRepository;
-import tn.esprit.rh.achat.repositories.OperateurRepository;
 
-import java.util.Date;  // ← ADD THIS IMPORT
 import java.util.List;
 
 @Service
@@ -23,15 +16,6 @@ public class FactureServiceImpl implements IFactureService {
 
     @Autowired
     FactureRepository factureRepository;
-    
-    @Autowired
-    DetailFactureRepository detailFactureRepository;
-    
-    @Autowired
-    FournisseurRepository fournisseurRepository;
-    
-    @Autowired
-    OperateurRepository operateurRepository;
 
     @Override
     public List<Facture> retrieveAllFactures() {
@@ -62,32 +46,10 @@ public class FactureServiceImpl implements IFactureService {
         factureRepository.deleteById(id);
     }
 
+    // Add this method if it's in the interface
     @Override
-    public List<Facture> getFacturesByFournisseur(Long idFournisseur) {
-        Fournisseur fournisseur = fournisseurRepository.findById(idFournisseur).orElse(null);
-        if (fournisseur != null) {
-            return fournisseur.getFactures();
-        }
-        return null;
-    }
-
-    @Override
-    public float getChiffreAffaireEntreDeuxDate(Date startDate, Date endDate) {
-        List<Facture> factures = factureRepository.findByDateFactureBetween(startDate, endDate);
-        float total = 0;
-        for (Facture facture : factures) {
-            total += facture.getMontantFacture();
-        }
-        return total;
-    }
-
-    @Override
-    public float getMontantFactureEntreDeuxDate(Date startDate, Date endDate) {
-        List<Facture> factures = factureRepository.findByDateFactureBetween(startDate, endDate);
-        float total = 0;
-        for (Facture facture : factures) {
-            total += facture.getMontantFacture();
-        }
-        return total;
+    public float pourcentageRecouvrement(Date startDate, Date endDate) {
+        // Implementation
+        return 0;
     }
 }
