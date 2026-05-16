@@ -11,6 +11,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 @Service
 @Slf4j
 @Transactional
@@ -28,6 +30,7 @@ public class FactureServiceImpl implements IFactureService {
 	ProduitRepository produitRepository;
     @Autowired
     ReglementServiceImpl reglementService;
+	 private static final Logger log = LoggerFactory.getLogger(FactureServiceImpl.class);
 	
 	@Override
 	public List<Facture> retrieveAllFactures() {
