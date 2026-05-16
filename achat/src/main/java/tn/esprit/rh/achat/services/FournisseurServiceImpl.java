@@ -30,7 +30,6 @@ public class FournisseurServiceImpl implements IFournisseurService {
 	SecteurActiviteRepository secteurActiviteRepository;
 	private static final Logger log = LoggerFactory.getLogger(FournisseurServiceImpl.class);
 	@Override
-	@Override
 	public List<Fournisseur> retrieveAllFournisseurs() {
    	 List<Fournisseur> fournisseurs = fournisseurRepository.findAll();
     	for (Fournisseur fournisseur : fournisseurs) {
