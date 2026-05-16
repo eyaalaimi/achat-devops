@@ -23,7 +23,6 @@ public class FactureServiceImpl implements IFactureService {
     @Autowired
     OperateurRepository operateurRepository;
 
-    @Override
     public List<Facture> retrieveAllFactures() {
         List<Facture> factures = factureRepository.findAll();
         for (Facture facture : factures) {
@@ -32,32 +31,26 @@ public class FactureServiceImpl implements IFactureService {
         return factures;
     }
 
-    @Override
     public Facture addFacture(Facture f) {
         return factureRepository.save(f);
     }
 
-    @Override
     public Facture updateFacture(Facture f) {
         return factureRepository.save(f);
     }
 
-    @Override
     public Facture retrieveFacture(Long id) {
         return factureRepository.findById(id).orElse(null);
     }
 
-    @Override
     public void deleteFacture(Long id) {
         factureRepository.deleteById(id);
     }
 
-    @Override
     public List<Facture> getFacturesByFournisseur(Long idFournisseur) {
         return factureRepository.findByFournisseurId(idFournisseur);
     }
 
-    @Override
     public void cancelFacture(Long idFacture) {
         Facture facture = factureRepository.findById(idFacture).orElse(null);
         if (facture != null) {
@@ -67,7 +60,6 @@ public class FactureServiceImpl implements IFactureService {
         }
     }
 
-    @Override
     public void assignOperateurToFacture(Long idOperateur, Long idFacture) {
         Facture facture = factureRepository.findById(idFacture).orElse(null);
         Operateur operateur = operateurRepository.findById(idOperateur).orElse(null);
@@ -78,7 +70,6 @@ public class FactureServiceImpl implements IFactureService {
         }
     }
 
-    @Override
     public float pourcentageRecouvrement(Date startDate, Date endDate) {
         List<Facture> factures = factureRepository.findAll();
         if (factures == null || factures.isEmpty()) {
