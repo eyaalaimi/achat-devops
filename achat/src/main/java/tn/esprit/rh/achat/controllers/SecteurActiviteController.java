@@ -1,58 +1,82 @@
 package tn.esprit.rh.achat.controllers;
 
 import io.swagger.annotations.Api;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import tn.esprit.rh.achat.dto.SecteurActiviteDTO;
 import tn.esprit.rh.achat.entities.SecteurActivite;
 import tn.esprit.rh.achat.services.ISecteurActiviteService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
-@Api(tags = "Gestion des secteurs activites")
+@Api(tags = "Gestion des secteurActivites")
 @RequestMapping("/secteurActivite")
-@CrossOrigin("*")
 public class SecteurActiviteController {
 
-	@Autowired
-	ISecteurActiviteService secteurActiviteService;
-	
-	// http://localhost:8089/SpringMVC/secteurActivite/retrieve-all-secteurActivite
-	@GetMapping("/retrieve-all-secteurActivite")
-	@ResponseBody
-	public List<SecteurActivite> getSecteurActivite() {
-		List<SecteurActivite> list = secteurActiviteService.retrieveAllSecteurActivite();
-		return list;
-	}
+    private static final Logger log = LoggerFactory.getLogger(SecteurActiviteController.class);
 
-	// http://localhost:8089/SpringMVC/secteurActivite/retrieve-secteurActivite/8
-	@GetMapping("/retrieve-secteurActivite/{secteurActivite-id}")
-	@ResponseBody
-	public SecteurActivite retrieveSecteurActivite(@PathVariable("secteurActivite-id") Long secteurActiviteId) {
-		return secteurActiviteService.retrieveSecteurActivite(secteurActiviteId);
-	}
+    @Autowired
+    ISecteurActiviteService secteurActiviteService;
 
-	// http://localhost:8089/SpringMVC/secteurActivite/add-secteurActivite
-	@PostMapping("/add-secteurActivite")
-	@ResponseBody
-	public SecteurActivite addSecteurActivite(@RequestBody SecteurActivite sa) {
-		SecteurActivite secteurActivite = secteurActiviteService.addSecteurActivite(sa);
-		return secteurActivite;
-	}
+    private SecteurActiviteDTO convertToDTO(SecteurActivite entity) {
+        if (entity == null) return null;
+        return new SecteurActiviteDTO(
+            entity.getIdSecteurActivite(),
+            entity.getCodeSecteur(),
+            entity.getLibelleSecteur()
+        );
+    }
 
-	// http://localhost:8089/SpringMVC/secteurActivite/remove-secteurActivite/{secteurActivite-id}
-	@DeleteMapping("/remove-secteurActivite/{secteurActivite-id}")
-	@ResponseBody
-	public void removeSecteurActivite(@PathVariable("secteurActivite-id") Long secteurActiviteId) {
-		secteurActiviteService.deleteSecteurActivite(secteurActiviteId);
-	}
+    private SecteurActivite convertToEntity(SecteurActiviteDTO dto) {
+        if (dto == null) return null;
+        SecteurActivite entity = new SecteurActivite();
+        entity.setIdSecteurActivite(dto.getIdSecteurActivite());
+        entity.setCodeSecteur(dto.getCodeSecteur());
+        entity.setLibelleSecteur(dto.getLibelleSecteur());
+        return entity;
+    }
 
-	// http://localhost:8089/SpringMVC/secteurActivite/modify-secteurActivite
-	@PutMapping("/modify-secteurActivite")
-	@ResponseBody
-	public SecteurActivite modifySecteurActivite(@RequestBody SecteurActivite secteurActivite) {
-		return secteurActiviteService.updateSecteurActivite(secteurActivite);
-	}
+    @GetMapping("/retrieve-all-secteurActivite")
+    @ResponseBody
+    public List<SecteurActiviteDTO> getSecteurActivites() {
+        return secteurActiviteService.retrieveAllSecteurActivite()
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
 
-	
+    @GetMapping("/retrieve-secteurActivite/{secteurActivite-id}")
+    @ResponseBody
+    public SecteurActiviteDTO retrieveSecteurActivite(@PathVariable("secteurActivite-id") Long secteurActiviteId) {
+        return convertToDTO(secteurActiviteService.retrieveSecteurActivite(secteurActiviteId));
+    }
+
+    @PostMapping("/add-secteurActivite")
+    @ResponseBody
+    public SecteurActiviteDTO addSecteurActivite(@RequestBody SecteurActiviteDTO secteurActiviteDTO) {
+        SecteurActivite entity = convertToEntity(secteurActiviteDTO);
+        SecteurActivite saved = secteurActiviteService.addSecteurActivite(entity);
+        log.info("Added secteurActivite with id: {}", saved.getIdSecteurActivite());
+        return convertToDTO(saved);
+    }
+
+    @DeleteMapping("/remove-secteurActivite/{secteurActivite-id}")
+    @ResponseBody
+    public void removeSecteurActivite(@PathVariable("secteurActivite-id") Long secteurActiviteId) {
+        log.info("Deleting secteurActivite with id: {}", secteurActiviteId);
+        secteurActiviteService.deleteSecteurActivite(secteurActiviteId);
+    }
+
+    @PutMapping("/modify-secteurActivite")
+    @ResponseBody
+    public SecteurActiviteDTO modifySecteurActivite(@RequestBody SecteurActiviteDTO secteurActiviteDTO) {
+        SecteurActivite entity = convertToEntity(secteurActiviteDTO);
+        SecteurActivite updated = secteurActiviteService.updateSecteurActivite(entity);
+        log.info("Modified secteurActivite with id: {}", updated.getIdSecteurActivite());
+        return convertToDTO(updated);
+    }
 }
