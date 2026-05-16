@@ -22,8 +22,7 @@ public class ProduitRestController {
 	@GetMapping("/retrieve-all-produits")
 	@ResponseBody
 	public List<Produit> getProduits() {
-		List<Produit> list = produitService.retrieveAllProduits();
-		return list;
+    return produitService.retrieveAllProduits();
 	}
 
 	// http://localhost:8089/SpringMVC/produit/retrieve-produit/8
