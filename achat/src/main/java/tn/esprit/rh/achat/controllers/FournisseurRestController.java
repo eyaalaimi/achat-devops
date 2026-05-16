@@ -24,8 +24,7 @@ public class FournisseurRestController {
         return new FournisseurDTO(
             entity.getIdFournisseur(),
             entity.getCode(),
-            entity.getLibelle(),
-            entity.getDateDebutCollaboration()
+            entity.getLibelle()
         );
     }
 
@@ -36,7 +35,6 @@ public class FournisseurRestController {
         entity.setIdFournisseur(dto.getIdFournisseur());
         entity.setCode(dto.getCode());
         entity.setLibelle(dto.getLibelle());
-        entity.setDateDebutCollaboration(dto.getDateDebutCollaboration());
         return entity;
     }
 
