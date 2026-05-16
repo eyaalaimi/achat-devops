@@ -1,48 +1,66 @@
-package tn.esprit.rh.achat.controllers;
+package tn.esprit.rh.achat.dto;
 
-import io.swagger.annotations.Api;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-import tn.esprit.rh.achat.entities.Facture;
-import tn.esprit.rh.achat.services.IFactureService;
+import java.util.Date;
 
-import java.util.List;
+public class FactureDTO {
+    private Long idFacture;
+    private Float montantRemise;
+    private Float montantFacture;
+    private Date dateFacture;
+    private Boolean active;
 
-@RestController
-@Api(tags = "Gestion des factures")
-@RequestMapping("/facture")
-public class FactureRestController {
-
-    @Autowired
-    IFactureService factureService;
-
-    @GetMapping("/retrieve-all-factures")
-    @ResponseBody
-    public List<Facture> getFactures() {
-        return factureService.retrieveAllFactures();
+    // Default constructor
+    public FactureDTO() {
     }
 
-    @GetMapping("/retrieve-facture/{facture-id}")
-    @ResponseBody
-    public Facture retrieveFacture(@PathVariable("facture-id") Long factureId) {
-        return factureService.retrieveFacture(factureId);
+    // Constructor with fields
+    public FactureDTO(Long idFacture, Float montantRemise, Float montantFacture, Date dateFacture, Boolean active) {
+        this.idFacture = idFacture;
+        this.montantRemise = montantRemise;
+        this.montantFacture = montantFacture;
+        this.dateFacture = dateFacture;
+        this.active = active;
     }
 
-    @PostMapping("/add-facture")
-    @ResponseBody
-    public Facture addFacture(@RequestBody Facture facture) {
-        return factureService.addFacture(facture);
+    // Getters
+    public Long getIdFacture() {
+        return idFacture;
     }
 
-    @DeleteMapping("/remove-facture/{facture-id}")
-    @ResponseBody
-    public void removeFacture(@PathVariable("facture-id") Long factureId) {
-        factureService.deleteById(factureId);
+    public Float getMontantRemise() {
+        return montantRemise;
     }
 
-    @PutMapping("/modify-facture")
-    @ResponseBody
-    public Facture modifyFacture(@RequestBody Facture facture) {
-        return factureService.save(facture);
+    public Float getMontantFacture() {
+        return montantFacture;
+    }
+
+    public Date getDateFacture() {
+        return dateFacture;
+    }
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    // Setters
+    public void setIdFacture(Long idFacture) {
+        this.idFacture = idFacture;
+    }
+
+    public void setMontantRemise(Float montantRemise) {
+        this.montantRemise = montantRemise;
+    }
+
+    public void setMontantFacture(Float montantFacture) {
+        this.montantFacture = montantFacture;
+    }
+
+    public void setDateFacture(Date dateFacture) {
+        this.dateFacture = dateFacture;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
     }
 }
