@@ -1,27 +1,48 @@
-package tn.esprit.rh.achat.dto;
+package tn.esprit.rh.achat.controllers;
 
-import java.util.Date;
+import io.swagger.annotations.Api;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import tn.esprit.rh.achat.entities.Facture;
+import tn.esprit.rh.achat.services.IFactureService;
 
-public class FactureDTO {
-    private Long idFacture;
-    private Double montantRemise;
-    private Double montantFacture;
-    private Date dateFacture;
-    private Boolean active;
+import java.util.List;
 
-    public FactureDTO() {}
+@RestController
+@Api(tags = "Gestion des factures")
+@RequestMapping("/facture")
+public class FactureRestController {
 
-    // Getters
-    public Long getIdFacture() { return idFacture; }
-    public Double getMontantRemise() { return montantRemise; }
-    public Double getMontantFacture() { return montantFacture; }
-    public Date getDateFacture() { return dateFacture; }
-    public Boolean getActive() { return active; }
+    @Autowired
+    IFactureService factureService;
 
-    // Setters
-    public void setIdFacture(Long idFacture) { this.idFacture = idFacture; }
-    public void setMontantRemise(Double montantRemise) { this.montantRemise = montantRemise; }
-    public void setMontantFacture(Double montantFacture) { this.montantFacture = montantFacture; }
-    public void setDateFacture(Date dateFacture) { this.dateFacture = dateFacture; }
-    public void setActive(Boolean active) { this.active = active; }
+    @GetMapping("/retrieve-all-factures")
+    @ResponseBody
+    public List<Facture> getFactures() {
+        return factureService.retrieveAllFactures();
+    }
+
+    @GetMapping("/retrieve-facture/{facture-id}")
+    @ResponseBody
+    public Facture retrieveFacture(@PathVariable("facture-id") Long factureId) {
+        return factureService.retrieveFacture(factureId);
+    }
+
+    @PostMapping("/add-facture")
+    @ResponseBody
+    public Facture addFacture(@RequestBody Facture facture) {
+        return factureService.addFacture(facture);
+    }
+
+    @DeleteMapping("/remove-facture/{facture-id}")
+    @ResponseBody
+    public void removeFacture(@PathVariable("facture-id") Long factureId) {
+        factureService.deleteById(factureId);
+    }
+
+    @PutMapping("/modify-facture")
+    @ResponseBody
+    public Facture modifyFacture(@RequestBody Facture facture) {
+        return factureService.save(facture);
+    }
 }
