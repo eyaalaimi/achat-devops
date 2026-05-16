@@ -33,6 +33,9 @@ public class Produit implements Serializable {
     public Integer getQuantite() { return quantite; }
     public Stock getStock() { return stock; }
     public CategorieProduit getCategorieProduit() { return categorieProduit; }
+    
+    // Add this missing getter
+    public Float getPrix() { return prixUnitaire; }
 
     // Setters
     public void setIdProduit(Long idProduit) { this.idProduit = idProduit; }
