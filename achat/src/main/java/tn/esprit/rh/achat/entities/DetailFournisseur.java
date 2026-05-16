@@ -14,6 +14,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.io.Serializable;
+import java.util.Date;
 
 @Entity
 @Getter
@@ -33,5 +35,19 @@ public class DetailFournisseur implements Serializable{
 	@OneToOne(mappedBy="detailFournisseur")
 	@JsonIgnore
 	private Fournisseur fournisseur;
+	// Getters
+    public Long getIdDetailFournisseur() { return idDetailFournisseur; }
+    public Date getDateDebutCollaboration() { return dateDebutCollaboration; }
+    public String getAdresse() { return adresse; }
+    public String getEmail() { return email; }
+    public Fournisseur getFournisseur() { return fournisseur; }
+
+    // Setters
+    public void setIdDetailFournisseur(Long idDetailFournisseur) { this.idDetailFournisseur = idDetailFournisseur; }
+    public void setDateDebutCollaboration(Date dateDebutCollaboration) { this.dateDebutCollaboration = dateDebutCollaboration; }
+    public void setAdresse(String adresse) { this.adresse = adresse; }
+    public void setEmail(String email) { this.email = email; }
+    public void setFournisseur(Fournisseur fournisseur) { this.fournisseur = fournisseur; }
+}	
 	
 }
