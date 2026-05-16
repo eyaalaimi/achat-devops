@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 @RestController
 @Api(tags = "Gestion des produits")
 @RequestMapping("/produit")
-public class ProduitController {
+public class ProduitRestController {
 
     @Autowired
     IProduitService produitService;
