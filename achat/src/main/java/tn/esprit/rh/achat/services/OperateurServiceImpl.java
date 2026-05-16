@@ -17,6 +17,7 @@ public class OperateurServiceImpl implements IOperateurService {
     @Autowired
     OperateurRepository operateurRepository;
 
+    @Override
     public List<Operateur> retrieveAllOperateurs() {
         List<Operateur> operateurs = operateurRepository.findAll();
         for (Operateur operateur : operateurs) {
@@ -25,10 +26,12 @@ public class OperateurServiceImpl implements IOperateurService {
         return operateurs;
     }
 
+    @Override
     public Operateur addOperateur(Operateur o) {
         return operateurRepository.save(o);
     }
 
+    @Override
     public Operateur updateOperateur(Operateur o) {
         if (o == null || o.getIdOperateur() == null) {
             log.warn("Cannot update null operateur or operateur without ID");
@@ -45,10 +48,12 @@ public class OperateurServiceImpl implements IOperateurService {
         return operateurRepository.save(existing);
     }
 
+    @Override
     public Operateur retrieveOperateur(Long id) {
         return operateurRepository.findById(id).orElse(null);
     }
 
+    @Override
     public void deleteOperateur(Long id) {
         operateurRepository.deleteById(id);
         log.info("Deleted operateur with id: {}", id);
