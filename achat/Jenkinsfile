@@ -57,6 +57,7 @@ pipeline {
             steps {
                 dir('achat') {
                     echo 'Nexus publish - will be configured later'
+                    sh 'mvn deploy'
                 }
             }
         }
