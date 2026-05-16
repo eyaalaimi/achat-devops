@@ -5,7 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;  // ← ADD THIS LINE
+import lombok.ToString;
+
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Set;
@@ -15,10 +16,8 @@ import java.util.Set;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString  // This is now imported
+@ToString
 public class CategorieProduit implements Serializable {
-
-    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
