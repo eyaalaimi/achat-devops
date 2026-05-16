@@ -1,6 +1,8 @@
 package tn.esprit.rh.achat.controllers;
 
 import io.swagger.annotations.Api;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.rh.achat.entities.Facture;
@@ -12,6 +14,8 @@ import java.util.List;
 @Api(tags = "Gestion des factures")
 @RequestMapping("/facture")
 public class FactureRestController {
+
+    private static final Logger log = LoggerFactory.getLogger(FactureRestController.class);
 
     @Autowired
     IFactureService factureService;
@@ -37,12 +41,13 @@ public class FactureRestController {
     @DeleteMapping("/remove-facture/{facture-id}")
     @ResponseBody
     public void removeFacture(@PathVariable("facture-id") Long factureId) {
-        System.err.println("Deleting facture with id: " + factureId);
+        log.info("Deleting facture with id: {}", factureId);
     }
 
     @PutMapping("/modify-facture")
     @ResponseBody
     public Facture modifyFacture(@RequestBody Facture facture) {
+        log.info("Modifying facture: {}", facture);
         return facture;
     }
 }
