@@ -1,29 +1,48 @@
-package tn.esprit.rh.achat.entities;
+package tn.esprit.rh.achat.controllers;
 
-import lombok.*;
-import javax.persistence.*;
-import java.io.Serializable;
-import java.util.Date;
-import java.util.Set;
+import io.swagger.annotations.Api;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import tn.esprit.rh.achat.entities.Facture;
+import tn.esprit.rh.achat.services.IFactureService;
 
-@Entity
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
-@ToString
-public class Facture implements Serializable {
+import java.util.List;
 
-    private static final long serialVersionUID = 1L;
+@RestController
+@Api(tags = "Gestion des factures")
+@RequestMapping("/facture")
+public class FactureRestController {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long idFacture;
-    
-    private Float montantRemise;
-    private Float montantFacture;
-    private Date dateFacture;
-    private Boolean active;
-    
-    // relationships...
+    @Autowired
+    IFactureService factureService;
+
+    @GetMapping("/retrieve-all-factures")
+    @ResponseBody
+    public List<Facture> getFactures() {
+        return factureService.retrieveAllFactures();
+    }
+
+    @GetMapping("/retrieve-facture/{facture-id}")
+    @ResponseBody
+    public Facture retrieveFacture(@PathVariable("facture-id") Long factureId) {
+        return factureService.retrieveFacture(factureId);
+    }
+
+    @PostMapping("/add-facture")
+    @ResponseBody
+    public Facture addFacture(@RequestBody Facture facture) {
+        return factureService.addFacture(facture);
+    }
+
+    @DeleteMapping("/remove-facture/{facture-id}")
+    @ResponseBody
+    public void removeFacture(@PathVariable("facture-id") Long factureId) {
+        factureService.deleteFacture(factureId);
+    }
+
+    @PutMapping("/modify-facture")
+    @ResponseBody
+    public Facture modifyFacture(@RequestBody Facture facture) {
+        return factureService.updateFacture(facture);
+    }
 }
