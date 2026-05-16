@@ -29,13 +29,10 @@ public class Produit implements Serializable {
     public Long getIdProduit() { return idProduit; }
     public String getCode() { return code; }
     public String getLibelle() { return libelle; }
-    public Float getPrixUnitaire() { return prixUnitaire; }
+    public Float getPrixUnitaire() { return prixUnitaire; }  // Keep only this one
     public Integer getQuantite() { return quantite; }
     public Stock getStock() { return stock; }
     public CategorieProduit getCategorieProduit() { return categorieProduit; }
-    
-    // Add this missing getter
-    public Float getPrix() { return prixUnitaire; }
 
     // Setters
     public void setIdProduit(Long idProduit) { this.idProduit = idProduit; }
