@@ -1,22 +1,11 @@
 package tn.esprit.rh.achat.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Set;
 
 @Entity
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
-@ToString
 public class CategorieProduit implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -31,4 +20,16 @@ public class CategorieProduit implements Serializable {
     @JsonIgnore
     @OneToMany(mappedBy = "categorieProduit")
     private Set<Produit> produits;
+
+    // Getters
+    public Long getIdCategorieProduit() { return idCategorieProduit; }
+    public String getCodeCategorie() { return codeCategorie; }
+    public String getLibelleCategorie() { return libelleCategorie; }
+    public Set<Produit> getProduits() { return produits; }
+
+    // Setters
+    public void setIdCategorieProduit(Long idCategorieProduit) { this.idCategorieProduit = idCategorieProduit; }
+    public void setCodeCategorie(String codeCategorie) { this.codeCategorie = codeCategorie; }
+    public void setLibelleCategorie(String libelleCategorie) { this.libelleCategorie = libelleCategorie; }
+    public void setProduits(Set<Produit> produits) { this.produits = produits; }
 }
