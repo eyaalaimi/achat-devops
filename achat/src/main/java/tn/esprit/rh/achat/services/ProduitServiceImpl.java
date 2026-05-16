@@ -11,6 +11,8 @@ import tn.esprit.rh.achat.repositories.StockRepository;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 @Slf4j
@@ -22,6 +24,7 @@ public class ProduitServiceImpl implements IProduitService {
 	StockRepository stockRepository;
 	@Autowired
 	CategorieProduitRepository categorieProduitRepository;
+	private static final Logger log = LoggerFactory.getLogger(ProduitServiceImpl.class);
 
 	@Override
 	public List<Produit> retrieveAllProduits() {
