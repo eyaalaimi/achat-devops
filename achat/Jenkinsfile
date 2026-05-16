@@ -54,14 +54,12 @@ pipeline {
         }
         
         stage('📤 Publish to Nexus') {
-            steps {
-                dir('achat') {
-                    echo 'Nexus publish - will be configured later'
-                    sh 'mvn deploy'
-                }
-            }
+    steps {
+        dir('achat') {
+            sh 'mvn deploy -Dnexus.username=admin -Dnexus.password=nexus123456'
         }
     }
+}
     
     post {
         always {
