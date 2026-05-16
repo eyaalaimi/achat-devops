@@ -1,48 +1,45 @@
-package tn.esprit.rh.achat.controllers;
+package tn.esprit.rh.achat.entities;
 
-import io.swagger.annotations.Api;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-import tn.esprit.rh.achat.entities.Facture;
-import tn.esprit.rh.achat.services.IFactureService;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-import java.util.List;
+import javax.persistence.*;
+import java.io.Serializable;
+import java.util.Date;
+import java.util.Set;
 
-@RestController
-@Api(tags = "Gestion des factures")
-@RequestMapping("/facture")
-public class FactureRestController {
+@Entity
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
+public class Facture implements Serializable {
 
-    @Autowired
-    IFactureService factureService;
+    private static final long serialVersionUID = 1L;
 
-    @GetMapping("/retrieve-all-factures")
-    @ResponseBody
-    public List<Facture> getFactures() {
-        return factureService.retrieveAllFactures();
-    }
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long idFacture;
 
-    @GetMapping("/retrieve-facture/{facture-id}")
-    @ResponseBody
-    public Facture retrieveFacture(@PathVariable("facture-id") Long factureId) {
-        return factureService.retrieveFacture(factureId);
-    }
+    private Float montantRemise;
+    private Float montantFacture;
+    private Date dateFacture;
+    private Boolean active;
 
-    @PostMapping("/add-facture")
-    @ResponseBody
-    public Facture addFacture(@RequestBody Facture facture) {
-        return factureService.addFacture(facture);
-    }
+    @JsonIgnore
+    @OneToMany(mappedBy = "facture")
+    private Set<DetailFacture> detailFactures;
 
-    @DeleteMapping("/remove-facture/{facture-id}")
-    @ResponseBody
-    public void removeFacture(@PathVariable("facture-id") Long factureId) {
-        factureService.deleteFacture(factureId);
-    }
+    @ManyToOne
+    @JoinColumn(name = "fournisseur_id")
+    private Fournisseur fournisseur;
 
-    @PutMapping("/modify-facture")
-    @ResponseBody
-    public Facture modifyFacture(@RequestBody Facture facture) {
-        return factureService.updateFacture(facture);
-    }
+    @ManyToMany
+    @JsonIgnore
+    private Set<Operateur> operateurs;
 }
