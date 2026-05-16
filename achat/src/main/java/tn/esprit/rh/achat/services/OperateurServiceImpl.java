@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import tn.esprit.rh.achat.entities.Operateur;
 import tn.esprit.rh.achat.repositories.OperateurRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -19,7 +20,8 @@ public class OperateurServiceImpl implements IOperateurService {
 
     @Override
     public List<Operateur> retrieveAllOperateurs() {
-        List<Operateur> operateurs = operateurRepository.findAll();
+        List<Operateur> operateurs = new ArrayList<>();
+        operateurRepository.findAll().forEach(operateurs::add);
         for (Operateur operateur : operateurs) {
             log.info("operateur : {}", operateur);
         }
