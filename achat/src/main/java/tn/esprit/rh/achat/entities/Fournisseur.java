@@ -1,21 +1,10 @@
 package tn.esprit.rh.achat.entities;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Set;
 
 @Entity
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
-@ToString
 public class Fournisseur implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -32,4 +21,18 @@ public class Fournisseur implements Serializable {
     
     @ManyToMany
     private Set<SecteurActivite> secteurActivites;
+
+    // Getters
+    public Long getIdFournisseur() { return idFournisseur; }
+    public String getCode() { return code; }
+    public String getLibelle() { return libelle; }
+    public Set<Facture> getFactures() { return factures; }
+    public Set<SecteurActivite> getSecteurActivites() { return secteurActivites; }
+
+    // Setters
+    public void setIdFournisseur(Long idFournisseur) { this.idFournisseur = idFournisseur; }
+    public void setCode(String code) { this.code = code; }
+    public void setLibelle(String libelle) { this.libelle = libelle; }
+    public void setFactures(Set<Facture> factures) { this.factures = factures; }
+    public void setSecteurActivites(Set<SecteurActivite> secteurActivites) { this.secteurActivites = secteurActivites; }
 }
