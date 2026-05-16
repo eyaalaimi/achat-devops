@@ -11,6 +11,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.io.Serializable;
+
 
 @Entity
 @Getter
@@ -31,5 +33,22 @@ public class DetailFacture implements Serializable {
 	@ManyToOne
 	@JsonIgnore
 	Facture facture;
+	 // Getters
+    public Long getIdDetailFacture() { return idDetailFacture; }
+    public Integer getQteCommandee() { return qteCommandee; }
+    public Float getPrixTotalDetail() { return prixTotalDetail; }
+    public Float getPourcentageRemise() { return pourcentageRemise; }
+    public Float getMontantRemise() { return montantRemise; }
+    public Facture getFacture() { return facture; }
+    public Produit getProduit() { return produit; }
 
+    // Setters
+    public void setIdDetailFacture(Long idDetailFacture) { this.idDetailFacture = idDetailFacture; }
+    public void setQteCommandee(Integer qteCommandee) { this.qteCommandee = qteCommandee; }
+    public void setPrixTotalDetail(Float prixTotalDetail) { this.prixTotalDetail = prixTotalDetail; }
+    public void setPourcentageRemise(Float pourcentageRemise) { this.pourcentageRemise = pourcentageRemise; }
+    public void setMontantRemise(Float montantRemise) { this.montantRemise = montantRemise; }
+    public void setFacture(Facture facture) { this.facture = facture; }
+    public void setProduit(Produit produit) { this.produit = produit; }
+}
 }
