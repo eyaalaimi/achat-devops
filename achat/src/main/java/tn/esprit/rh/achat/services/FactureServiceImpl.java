@@ -53,6 +53,11 @@ public class FactureServiceImpl implements IFactureService {
     }
 
     @Override
+    public List<Facture> getFacturesByFournisseur(Long idFournisseur) {
+        return factureRepository.findByFournisseurId(idFournisseur);
+    }
+
+    @Override
     public void cancelFacture(Long idFacture) {
         Facture facture = factureRepository.findById(idFacture).orElse(null);
         if (facture != null) {
