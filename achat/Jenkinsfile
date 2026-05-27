@@ -1,87 +1,69 @@
 pipeline {
     agent any
     
-    options {
-        disableConcurrentBuilds()
-        timeout(time: 30, unit: 'MINUTES')
-        timestamps()
-    }
-    
     environment {
-        // Remove tool declarations - use system Maven instead
-        MAVEN_OPTS = '-Dmaven.clean.failOnError=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120'
+        // SonarQube configuration
+        SONAR_HOST_URL = 'http://172.10.0.140:9000'
+        // You'll add the token in Jenkins credentials
     }
     
     stages {
-        stage('🔧 Pre-Clean') {
+        stage('Checkout') {
             steps {
-                // Manual cleanup before anything else
-                sh '''
-                    echo "Cleaning up previous builds..."
-                    # Kill stuck processes
-                    pkill -f "mvn" || true
-                    pkill -f "java.*achat" || true
-                    
-                    # Remove target directories
-                    find . -name "target" -type d -exec rm -rf {} + 2>/dev/null || true
-                '''
-            }
-        }
-        
-        stage('📦 Checkout SCM') {
-            steps {
-                echo 'Récupération du code depuis GitHub...'
                 checkout scm
-                echo '✅ Code récupéré'
             }
         }
         
-        stage('🔨 Clean & Compile') {
+        stage('Compile & Test') {
             steps {
-                echo 'Nettoyage et compilation du projet...'
-                
+                dir('achat') {
+                    sh 'mvn clean compile'
+                }
+            }
+        }
+        
+        stage('Unit Tests') {
+            steps {
+                dir('achat') {
+                    sh 'mvn test'
+                }
+            }
+        }
+        
+        stage('SonarQube Analysis') {
+            steps {
                 script {
-                    // Check Maven version
-                    sh 'mvn --version'
-                }
-                
-                dir('achat') {
-                    sh '''
-                        # Clean with error handling
-                        rm -rf target
-                        mvn clean compile -DskipTests -Dmaven.clean.failOnError=false
-                    '''
-                }
-                echo '✅ Compilation réussie'
-            }
-        }
-        
-        stage('🧪 Unit Tests') {
-            steps {
-                echo 'Exécution des tests unitaires...'
-                dir('achat') {
-                    sh 'mvn test -DskipTests=false'
-                }
-                echo '✅ Tests réussis'
-            }
-            post {
-                always {
-                    junit testResults: 'achat/target/surefire-reports/*.xml', allowEmptyResults: true
+                    // Make sure SonarQube server is configured in Jenkins
+                    withSonarQubeEnv('SonarQube') {
+                        dir('achat') {
+                            sh '''
+                                mvn sonar:sonar \
+                                    -Dsonar.projectKey=AchatDevOps \
+                                    -Dsonar.projectName="AchatDevOps" \
+                                    -Dsonar.host.url=${SONAR_HOST_URL} \
+                                    -Dsonar.java.binaries=target/classes
+                            '''
+                        }
+                    }
                 }
             }
         }
         
-        stage('📦 Package Application') {
+        stage('Quality Gate') {
             steps {
-                echo 'Packaging de l\'application...'
+                script {
+                    // Wait for SonarQube analysis to complete and check Quality Gate
+                    timeout(time: 10, unit: 'MINUTES') {
+                        waitForQualityGate abortPipeline: true
+                    }
+                }
+            }
+        }
+        
+        stage('Package') {
+            steps {
                 dir('achat') {
                     sh 'mvn package -DskipTests'
-                }
-                echo '✅ Package créé'
-            }
-            post {
-                success {
-                    archiveArtifacts artifacts: 'achat/target/*.jar', fingerprint: true, allowEmptyArchive: true
                 }
             }
         }
@@ -89,38 +71,13 @@ pipeline {
     
     post {
         always {
-            echo "Pipeline exécuté le : ${new Date()}"
-            // Clean workspace only if we're in a node context
-            script {
-                try {
-                    cleanWs(cleanWhenNotBuilt: false, deleteDirs: true)
-                } catch (err) {
-                    echo "Could not clean workspace: ${err.message}"
-                    // Manual cleanup as fallback
-                    sh 'rm -rf achat/target 2>/dev/null || true'
-                }
-            }
+            cleanWs()
         }
         success {
-            echo '🎉 PIPELINE RÉUSSI 🎉'
-            // Disable email temporarily to avoid connection errors
-            // emailext(
-            //     subject: "Pipeline réussi: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
-            //     body: "Le pipeline s'est terminé avec succès!\n\nBuild URL: ${env.BUILD_URL}",
-            //     to: 'team@company.com'
-            // )
+            echo 'Pipeline completed successfully!'
         }
         failure {
-            echo '❌ PIPELINE ÉCHOUÉ ❌'
-            // Disable email temporarily
-            // emailext(
-            //     subject: "Pipeline échoué: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
-            //     body: "Le pipeline a échoué! Veuillez vérifier les logs.\n\nBuild URL: ${env.BUILD_URL}",
-            //     to: 'team@company.com'
-            // )
-        }
-        unstable {
-            echo '⚠️ PIPELINE INSTABLE ⚠️'
+            echo 'Pipeline failed!'
         }
     }
 }
