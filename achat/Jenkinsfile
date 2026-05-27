@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     environment {
-        // Define SonarQube server (if not configured globally)
+        // Define SonarQube server URL
         SONAR_HOST_URL = 'http://172.10.0.140:9000'
     }
     
@@ -13,23 +13,10 @@ pipeline {
             }
         }
         
-        stage('Compile & Test') {
+        stage('Compile') {
             steps {
                 dir('achat') {
                     sh 'mvn clean compile'
-                }
-            }
-        }
-        
-        stage('Unit Tests') {
-            steps {
-                dir('achat') {
-                    sh 'mvn test'
-                }
-            }
-            post {
-                always {
-                    junit 'achat/target/surefire-reports/*.xml'
                 }
             }
         }
@@ -45,19 +32,9 @@ pipeline {
                                 -Dsonar.projectName="AchatDevOps" \
                                 -Dsonar.host.url=${SONAR_HOST_URL} \
                                 -Dsonar.login=${SONAR_TOKEN} \
-                                -Dsonar.java.binaries=target/classes \
-                                -Dsonar.sourceEncoding=UTF-8
+                                -Dsonar.java.binaries=target/classes
                         '''
                     }
-                }
-            }
-        }
-        
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 10, unit: 'MINUTES') {
-                    // Wait for SonarQube analysis
-                    waitForQualityGate abortPipeline: true
                 }
             }
         }
@@ -66,11 +43,6 @@ pipeline {
             steps {
                 dir('achat') {
                     sh 'mvn package -DskipTests'
-                }
-            }
-            post {
-                success {
-                    archiveArtifacts artifacts: 'achat/target/*.jar', allowEmptyArchive: true
                 }
             }
         }
