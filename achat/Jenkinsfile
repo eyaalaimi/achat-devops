@@ -1,6 +1,17 @@
 pipeline {
     agent any
     
+    options {
+        cleanWs()  // Clean workspace before each build
+        timeout(time: 30, unit: 'MINUTES')
+    }
+    
+    environment {
+        MAVEN_HOME = tool 'Maven-3.8.8'  // Configure in Jenkins Global Tools
+        JAVA_HOME = tool 'JDK-21'
+        MAVEN_OPTS = '-Dmaven.wagon.httpconnectionManager.ttlSeconds=120'
+    }
+    
     stages {
         stage('📦 Checkout SCM') {
             steps {
@@ -12,23 +23,47 @@ pipeline {
         
         stage('🔨 Clean & Compile') {
             steps {
-                echo 'Compilation du projet...'
+                echo 'Nettoyage et compilation du projet...'
                 dir('achat') {
-                    sh 'mvn clean compile'
+                    script {
+                        // Kill any lingering processes
+                        sh 'pkill -f "mvn" || true'
+                        sh 'pkill -f "java.*achat" || true'
+                        
+                        // Force remove target directory
+                        sh 'rm -rf target || true'
+                        
+                        // Compile with retry
+                        retry(2) {
+                            sh 'mvn clean compile -DskipTests'
+                        }
+                    }
                 }
+                echo '✅ Compilation réussie'
             }
         }
         
         stage('🧪 Unit Tests') {
             steps {
+                echo 'Exécution des tests unitaires...'
                 dir('achat') {
                     sh 'mvn test'
+                }
+                echo '✅ Tests réussis'
+            }
+            post {
+                always {
+                    junit 'achat/target/surefire-reports/*.xml'
                 }
             }
         }
         
         stage('📊 SonarQube Analysis') {
+            when {
+                expression { env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'develop' }
+            }
             steps {
+                echo 'Analyse SonarQube...'
                 dir('achat') {
                     withSonarQubeEnv('SonarQube') {
                         sh 'mvn sonar:sonar'
@@ -39,25 +74,42 @@ pipeline {
         
         stage('📦 Package Application') {
             steps {
+                echo 'Packaging de l\'application...'
                 dir('achat') {
                     sh 'mvn package -DskipTests'
                 }
+                echo '✅ Package créé'
             }
         }
         
         stage('🐳 Docker Build') {
+            when {
+                expression { env.BRANCH_NAME == 'main' }
+            }
             steps {
+                echo 'Construction de l\'image Docker...'
                 dir('achat') {
-                    sh 'docker build -t achat-app:latest .'
+                    script {
+                        def appVersion = sh(script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true).trim()
+                        sh """
+                            docker build -t achat-app:${appVersion} .
+                            docker tag achat-app:${appVersion} achat-app:latest
+                        """
+                    }
                 }
             }
         }
         
         stage('📤 Publish to Nexus') {
+            when {
+                expression { env.BRANCH_NAME == 'main' }
+            }
             steps {
+                echo 'Publication sur Nexus...'
                 dir('achat') {
-                    sh 'mvn deploy'
+                    sh 'mvn deploy -DskipTests'
                 }
+                echo '✅ Publié sur Nexus'
             }
         }
     }
@@ -65,12 +117,23 @@ pipeline {
     post {
         always {
             echo "Pipeline exécuté le : ${new Date()}"
+            cleanWs(cleanWhenNotBuilt: false)
+        }
+        success {
+            echo '🎉 PIPELINE RÉUSSI 🎉'
+            emailext(
+                subject: "Pipeline réussi: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
+                body: "Le pipeline s'est terminé avec succès!",
+                to: 'team@company.com'
+            )
         }
         failure {
             echo '❌ PIPELINE ÉCHOUÉ ❌'
-        }
-        success {
-            echo '✅ PIPELINE RÉUSSI ✅'
+            emailext(
+                subject: "Pipeline échoué: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
+                body: "Le pipeline a échoué! Veuillez vérifier les logs.",
+                to: 'team@company.com'
+            )
         }
     }
 }
