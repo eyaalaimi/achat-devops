@@ -2,27 +2,49 @@ pipeline {
     agent any
     
     environment {
+        // Tool paths
+        JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
+        MAVEN_HOME = '/usr/share/maven'
+        PATH = "$JAVA_HOME/bin:$MAVEN_HOME/bin:$PATH"
+        
+        // Server URLs
         SONAR_HOST_URL = 'http://172.10.0.140:9000'
         NEXUS_URL = 'http://172.10.0.140:8081'
+        
+        // Maven options
+        MAVEN_OPTS = '-Dmaven.wagon.httpconnectionManager.ttlSeconds=120 -Dmaven.wagon.http.retryHandler.count=3'
+    }
+    
+    options {
+        disableConcurrentBuilds()
+        timeout(time: 30, unit: 'MINUTES')
+        timestamps()
     }
     
     stages {
         stage('Checkout') {
             steps {
+                echo '📦 Récupération du code source...'
                 checkout scm
+                echo '✅ Code récupéré avec succès'
             }
         }
         
         stage('Compile') {
             steps {
+                echo '🔨 Compilation du projet...'
                 dir('achat') {
-                    sh 'mvn clean compile'
+                    sh '''
+                        mvn clean compile -DskipTests
+                    '''
                 }
+                echo '✅ Compilation réussie'
             }
         }
         
         stage('SonarQube Analysis') {
             steps {
+                echo '📊 Analyse SonarQube en cours...'
                 dir('achat') {
                     withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
                         sh '''
@@ -30,54 +52,113 @@ pipeline {
                                 -Dsonar.projectKey=AchatDevOps \
                                 -Dsonar.projectName="AchatDevOps" \
                                 -Dsonar.host.url=${SONAR_HOST_URL} \
-                                -Dsonar.login=${SONAR_TOKEN}
+                                -Dsonar.login=${SONAR_TOKEN} \
+                                -Dsonar.java.binaries=target/classes
                         '''
                     }
+                }
+                echo '✅ Analyse SonarQube terminée'
+            }
+        }
+        
+        stage('Unit Tests') {
+            steps {
+                echo '🧪 Exécution des tests unitaires...'
+                dir('achat') {
+                    sh 'mvn test'
+                }
+                echo '✅ Tests unitaires réussis'
+            }
+            post {
+                always {
+                    junit testResults: 'achat/target/surefire-reports/*.xml', allowEmptyResults: true
                 }
             }
         }
         
         stage('Package') {
             steps {
+                echo '📦 Packaging de l\'application...'
                 dir('achat') {
                     sh 'mvn package -DskipTests'
                 }
-                archiveArtifacts artifacts: 'achat/target/*.jar', allowEmptyArchive: true
+                echo '✅ Package créé avec succès'
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: 'achat/target/*.jar', fingerprint: true, allowEmptyArchive: false
+                }
             }
         }
         
         stage('Publish to Nexus') {
             steps {
+                echo '📤 Publication sur Nexus...'
                 dir('achat') {
                     withCredentials([usernamePassword(
                         credentialsId: 'nexus-credentials',
                         usernameVariable: 'NEXUS_USERNAME',
                         passwordVariable: 'NEXUS_PASSWORD'
                     )]) {
-                        sh '''
-                            mvn deploy:deploy-file \
-                                -Dfile=target/achat-1.0.0.jar \
-                                -DpomFile=pom.xml \
-                                -DrepositoryId=nexus-releases \
-                                -Durl=http://172.10.0.140:8081/repository/maven-releases/
-                        '''
+                        script {
+                            // Try Maven deploy first, fallback to curl
+                            try {
+                                sh '''
+                                    mvn deploy:deploy-file \
+                                        -Dfile=target/achat-1.0.0.jar \
+                                        -DpomFile=pom.xml \
+                                        -DrepositoryId=nexus-releases \
+                                        -Durl=${NEXUS_URL}/repository/maven-releases/ \
+                                        -Dusername=${NEXUS_USERNAME} \
+                                        -Dpassword=${NEXUS_PASSWORD}
+                                '''
+                            } catch (err) {
+                                echo 'Maven deploy failed, trying curl upload...'
+                                sh '''
+                                    # Create directory structure
+                                    curl -u ${NEXUS_USERNAME}:${NEXUS_PASSWORD} \
+                                        -X MKCOL \
+                                        "${NEXUS_URL}/repository/maven-releases/tn/esprit/rh/achat/" 2>/dev/null || true
+                                    
+                                    curl -u ${NEXUS_USERNAME}:${NEXUS_PASSWORD} \
+                                        -X MKCOL \
+                                        "${NEXUS_URL}/repository/maven-releases/tn/esprit/rh/achat/1.0.0/" 2>/dev/null || true
+                                    
+                                    # Upload JAR file
+                                    curl -u ${NEXUS_USERNAME}:${NEXUS_PASSWORD} \
+                                        --upload-file target/achat-1.0.0.jar \
+                                        "${NEXUS_URL}/repository/maven-releases/tn/esprit/rh/achat/1.0.0/achat-1.0.0.jar"
+                                    
+                                    # Upload POM file
+                                    curl -u ${NEXUS_USERNAME}:${NEXUS_PASSWORD} \
+                                        --upload-file pom.xml \
+                                        "${NEXUS_URL}/repository/maven-releases/tn/esprit/rh/achat/1.0.0/achat-1.0.0.pom"
+                                '''
+                            }
+                        }
                     }
                 }
+                echo '✅ Publication sur Nexus réussie'
             }
         }
     }
     
     post {
         always {
-            cleanWs()
+            echo "Pipeline exécuté le : ${new Date()}"
+            cleanWs(cleanWhenNotBuilt: false, deleteDirs: true)
         }
         success {
-            echo '✅ Pipeline completed successfully!'
-            echo "SonarQube Dashboard: ${SONAR_HOST_URL}/dashboard?id=AchatDevOps"
-            echo "Nexus Repository: ${NEXUS_URL}/repository/maven-releases/tn/esprit/rh/achat/"
+            echo '🎉 PIPELINE RÉUSSI ! 🎉'
+            echo "🔗 SonarQube Dashboard: ${SONAR_HOST_URL}/dashboard?id=AchatDevOps"
+            echo "🔗 Nexus Repository: ${NEXUS_URL}/repository/maven-releases/tn/esprit/rh/achat/1.0.0/"
         }
         failure {
-            echo '❌ Pipeline failed!'
+            echo '❌ PIPELINE ÉCHOUÉ ❌'
+            echo 'Veuillez vérifier les logs pour plus de détails'
+        }
+        unstable {
+            echo '⚠️ PIPELINE INSTABLE ⚠️'
         }
     }
 }
