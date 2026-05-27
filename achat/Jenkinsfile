@@ -2,11 +2,7 @@ pipeline {
     agent any
     
     environment {
-        // Tool paths
-        JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
-        MAVEN_HOME = '/usr/share/maven'
-        PATH = "$JAVA_HOME/bin:$MAVEN_HOME/bin:$PATH"
-        
+        // Remove JAVA_HOME and PATH - let system use default
         // Server URLs
         SONAR_HOST_URL = 'http://172.10.0.140:9000'
         NEXUS_URL = 'http://172.10.0.140:8081'
@@ -115,15 +111,6 @@ pipeline {
                             } catch (err) {
                                 echo 'Maven deploy failed, trying curl upload...'
                                 sh '''
-                                    # Create directory structure
-                                    curl -u ${NEXUS_USERNAME}:${NEXUS_PASSWORD} \
-                                        -X MKCOL \
-                                        "${NEXUS_URL}/repository/maven-releases/tn/esprit/rh/achat/" 2>/dev/null || true
-                                    
-                                    curl -u ${NEXUS_USERNAME}:${NEXUS_PASSWORD} \
-                                        -X MKCOL \
-                                        "${NEXUS_URL}/repository/maven-releases/tn/esprit/rh/achat/1.0.0/" 2>/dev/null || true
-                                    
                                     # Upload JAR file
                                     curl -u ${NEXUS_USERNAME}:${NEXUS_PASSWORD} \
                                         --upload-file target/achat-1.0.0.jar \
