@@ -2,9 +2,8 @@ pipeline {
     agent any
     
     environment {
-        // SonarQube configuration
+        // Define SonarQube server (if not configured globally)
         SONAR_HOST_URL = 'http://172.10.0.140:9000'
-        // You'll add the token in Jenkins credentials
     }
     
     stages {
@@ -28,22 +27,27 @@ pipeline {
                     sh 'mvn test'
                 }
             }
+            post {
+                always {
+                    junit 'achat/target/surefire-reports/*.xml'
+                }
+            }
         }
         
         stage('SonarQube Analysis') {
             steps {
-                script {
-                    // Make sure SonarQube server is configured in Jenkins
-                    withSonarQubeEnv('SonarQube') {
-                        dir('achat') {
-                            sh '''
-                                mvn sonar:sonar \
-                                    -Dsonar.projectKey=AchatDevOps \
-                                    -Dsonar.projectName="AchatDevOps" \
-                                    -Dsonar.host.url=${SONAR_HOST_URL} \
-                                    -Dsonar.java.binaries=target/classes
-                            '''
-                        }
+                dir('achat') {
+                    // Use credentials from Jenkins
+                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                        sh '''
+                            mvn sonar:sonar \
+                                -Dsonar.projectKey=AchatDevOps \
+                                -Dsonar.projectName="AchatDevOps" \
+                                -Dsonar.host.url=${SONAR_HOST_URL} \
+                                -Dsonar.login=${SONAR_TOKEN} \
+                                -Dsonar.java.binaries=target/classes \
+                                -Dsonar.sourceEncoding=UTF-8
+                        '''
                     }
                 }
             }
@@ -51,11 +55,9 @@ pipeline {
         
         stage('Quality Gate') {
             steps {
-                script {
-                    // Wait for SonarQube analysis to complete and check Quality Gate
-                    timeout(time: 10, unit: 'MINUTES') {
-                        waitForQualityGate abortPipeline: true
-                    }
+                timeout(time: 10, unit: 'MINUTES') {
+                    // Wait for SonarQube analysis
+                    waitForQualityGate abortPipeline: true
                 }
             }
         }
@@ -64,6 +66,11 @@ pipeline {
             steps {
                 dir('achat') {
                     sh 'mvn package -DskipTests'
+                }
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: 'achat/target/*.jar', allowEmptyArchive: true
                 }
             }
         }
