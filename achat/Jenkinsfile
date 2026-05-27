@@ -3,6 +3,7 @@ pipeline {
     
     environment {
         SONAR_HOST_URL = 'http://172.10.0.140:9000'
+        NEXUS_URL = 'http://172.10.0.140:8081'
     }
     
     stages {
@@ -23,22 +24,14 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 dir('achat') {
-                    script {
-                        // Check if credential exists
-                        try {
-                            withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                                sh '''
-                                    mvn sonar:sonar \
-                                        -Dsonar.projectKey=AchatDevOps \
-                                        -Dsonar.projectName="AchatDevOps" \
-                                        -Dsonar.host.url=${SONAR_HOST_URL} \
-                                        -Dsonar.login=${SONAR_TOKEN} \
-                                        -Dsonar.java.binaries=target/classes
-                                '''
-                            }
-                        } catch (err) {
-                            error "SonarQube token not found. Please add credential 'sonar-token' in Jenkins."
-                        }
+                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                        sh '''
+                            mvn sonar:sonar \
+                                -Dsonar.projectKey=AchatDevOps \
+                                -Dsonar.projectName="AchatDevOps" \
+                                -Dsonar.host.url=${SONAR_HOST_URL} \
+                                -Dsonar.login=${SONAR_TOKEN}
+                        '''
                     }
                 }
             }
@@ -49,10 +42,26 @@ pipeline {
                 dir('achat') {
                     sh 'mvn package -DskipTests'
                 }
+                archiveArtifacts artifacts: 'achat/target/*.jar', allowEmptyArchive: true
             }
-            post {
-                success {
-                    archiveArtifacts artifacts: 'achat/target/*.jar', allowEmptyArchive: true
+        }
+        
+        stage('Publish to Nexus') {
+            steps {
+                dir('achat') {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'nexus-credentials',
+                        usernameVariable: 'NEXUS_USERNAME',
+                        passwordVariable: 'NEXUS_PASSWORD'
+                    )]) {
+                        sh '''
+                            mvn deploy:deploy-file \
+                                -Dfile=target/achat-1.0.0.jar \
+                                -DpomFile=pom.xml \
+                                -DrepositoryId=nexus-releases \
+                                -Durl=http://172.10.0.140:8081/repository/maven-releases/
+                        '''
+                    }
                 }
             }
         }
@@ -64,6 +73,8 @@ pipeline {
         }
         success {
             echo '✅ Pipeline completed successfully!'
+            echo "SonarQube Dashboard: ${SONAR_HOST_URL}/dashboard?id=AchatDevOps"
+            echo "Nexus Repository: ${NEXUS_URL}/repository/maven-releases/tn/esprit/rh/achat/"
         }
         failure {
             echo '❌ Pipeline failed!'
