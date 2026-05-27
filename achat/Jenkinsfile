@@ -2,7 +2,6 @@ pipeline {
     agent any
     
     environment {
-        // Define SonarQube server URL
         SONAR_HOST_URL = 'http://172.10.0.140:9000'
     }
     
@@ -24,16 +23,22 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 dir('achat') {
-                    // Use credentials from Jenkins
-                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                        sh '''
-                            mvn sonar:sonar \
-                                -Dsonar.projectKey=AchatDevOps \
-                                -Dsonar.projectName="AchatDevOps" \
-                                -Dsonar.host.url=${SONAR_HOST_URL} \
-                                -Dsonar.login=${SONAR_TOKEN} \
-                                -Dsonar.java.binaries=target/classes
-                        '''
+                    script {
+                        // Check if credential exists
+                        try {
+                            withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                                sh '''
+                                    mvn sonar:sonar \
+                                        -Dsonar.projectKey=AchatDevOps \
+                                        -Dsonar.projectName="AchatDevOps" \
+                                        -Dsonar.host.url=${SONAR_HOST_URL} \
+                                        -Dsonar.login=${SONAR_TOKEN} \
+                                        -Dsonar.java.binaries=target/classes
+                                '''
+                            }
+                        } catch (err) {
+                            error "SonarQube token not found. Please add credential 'sonar-token' in Jenkins."
+                        }
                     }
                 }
             }
@@ -45,6 +50,11 @@ pipeline {
                     sh 'mvn package -DskipTests'
                 }
             }
+            post {
+                success {
+                    archiveArtifacts artifacts: 'achat/target/*.jar', allowEmptyArchive: true
+                }
+            }
         }
     }
     
@@ -53,10 +63,10 @@ pipeline {
             cleanWs()
         }
         success {
-            echo 'Pipeline completed successfully!'
+            echo '✅ Pipeline completed successfully!'
         }
         failure {
-            echo 'Pipeline failed!'
+            echo '❌ Pipeline failed!'
         }
     }
 }
