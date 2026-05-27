@@ -2,13 +2,16 @@ pipeline {
     agent any
     
     options {
-        cleanWs()  // Clean workspace before each build
+        // Valid options only
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '5'))
+        disableConcurrentBuilds()
         timeout(time: 30, unit: 'MINUTES')
+        timestamps()
     }
     
     environment {
         MAVEN_HOME = tool 'Maven-3.8.8'  // Configure in Jenkins Global Tools
-        JAVA_HOME = tool 'JDK-21'
+        JAVA_HOME = tool 'JDK-11'
         MAVEN_OPTS = '-Dmaven.wagon.httpconnectionManager.ttlSeconds=120'
     }
     
@@ -24,18 +27,23 @@ pipeline {
         stage('🔨 Clean & Compile') {
             steps {
                 echo 'Nettoyage et compilation du projet...'
+                
+                // Clean workspace manually
+                script {
+                    // Remove any existing target directories
+                    sh 'find . -name "target" -type d -exec rm -rf {} + 2>/dev/null || true'
+                    sh 'pkill -f "mvn" || true'
+                    sh 'pkill -f "java.*achat" || true'
+                }
+                
                 dir('achat') {
+                    // Force clean and compile with retry
                     script {
-                        // Kill any lingering processes
-                        sh 'pkill -f "mvn" || true'
-                        sh 'pkill -f "java.*achat" || true'
-                        
-                        // Force remove target directory
-                        sh 'rm -rf target || true'
-                        
-                        // Compile with retry
                         retry(2) {
-                            sh 'mvn clean compile -DskipTests'
+                            sh '''
+                                rm -rf target || true
+                                mvn clean compile -DskipTests -Dmaven.clean.failOnError=false
+                            '''
                         }
                     }
                 }
@@ -47,7 +55,7 @@ pipeline {
             steps {
                 echo 'Exécution des tests unitaires...'
                 dir('achat') {
-                    sh 'mvn test'
+                    sh 'mvn test -Dmaven.test.failure.ignore=false'
                 }
                 echo '✅ Tests réussis'
             }
@@ -79,6 +87,11 @@ pipeline {
                     sh 'mvn package -DskipTests'
                 }
                 echo '✅ Package créé'
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: 'achat/target/*.jar', fingerprint: true
+                }
             }
         }
         
@@ -115,15 +128,22 @@ pipeline {
     }
     
     post {
+        // Clean workspace in post section (not options)
         always {
             echo "Pipeline exécuté le : ${new Date()}"
-            cleanWs(cleanWhenNotBuilt: false)
+            
+            // Clean workspace at the end of pipeline
+            cleanWs(
+                cleanWhenNotBuilt: false,
+                deleteDirs: true,
+                disableDeferredWipeout: true
+            )
         }
         success {
             echo '🎉 PIPELINE RÉUSSI 🎉'
             emailext(
                 subject: "Pipeline réussi: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
-                body: "Le pipeline s'est terminé avec succès!",
+                body: "Le pipeline s'est terminé avec succès!\n\nBuild URL: ${env.BUILD_URL}",
                 to: 'team@company.com'
             )
         }
@@ -131,9 +151,12 @@ pipeline {
             echo '❌ PIPELINE ÉCHOUÉ ❌'
             emailext(
                 subject: "Pipeline échoué: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
-                body: "Le pipeline a échoué! Veuillez vérifier les logs.",
+                body: "Le pipeline a échoué! Veuillez vérifier les logs.\n\nBuild URL: ${env.BUILD_URL}",
                 to: 'team@company.com'
             )
+        }
+        unstable {
+            echo '⚠️ PIPELINE INSTABLE ⚠️'
         }
     }
 }
